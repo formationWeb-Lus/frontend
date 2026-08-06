@@ -1,6 +1,12 @@
+
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import {
+  FormEvent,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { useParams } from "next/navigation";
 
 import {
@@ -16,15 +22,20 @@ import {
   User,
 } from "lucide-react";
 
-
 // =====================================================
 // CONFIGURATION API
+// =====================================================
+// IMPORTANT :
+// .env.local doit contenir :
+//
+// NEXT_PUBLIC_API_URL=http://localhost:5000/api
+//
+// Donc ici on ne rajoute PAS /api dans les URLs.
 // =====================================================
 
 const API_URL =
   process.env.NEXT_PUBLIC_API_URL ||
-  "http://localhost:5000";
-
+  "http://localhost:5000/api";
 
 // =====================================================
 // TYPES
@@ -112,13 +123,11 @@ interface PublicPaymentResponse {
   message?: string;
 }
 
-
 // =====================================================
 // PAYMENT
 // =====================================================
 
 type Telecom = "AM" | "OM" | "MP" | "AF";
-
 
 // =====================================================
 // OUTILS
@@ -141,7 +150,6 @@ function formatPrice(
   }
 }
 
-
 function formatProductType(type: string) {
   const types: Record<string, string> = {
     PHYSICAL: "Produit physique",
@@ -154,7 +162,6 @@ function formatProductType(type: string) {
 
   return types[type] || type;
 }
-
 
 function getFieldType(
   type: string
@@ -182,7 +189,6 @@ function getFieldType(
 
   return "TEXT";
 }
-
 
 // =====================================================
 // PAGE
@@ -212,7 +218,6 @@ export default function PublicPaymentPage() {
     return undefined;
   }, [rawSlug]);
 
-
   // ===================================================
   // STATES
   // ===================================================
@@ -229,9 +234,9 @@ export default function PublicPaymentPage() {
     useState<string | null>(null);
 
   const [formValues, setFormValues] =
-    useState<Record<string, string | boolean>>(
-      {}
-    );
+    useState<
+      Record<string, string | boolean>
+    >({});
 
   const [telecom, setTelecom] =
     useState<Telecom | "">("");
@@ -247,7 +252,6 @@ export default function PublicPaymentPage() {
 
   const [paymentSuccess, setPaymentSuccess] =
     useState(false);
-
 
   // ===================================================
   // RÉCUPÉRER LA PAGE PUBLIQUE
@@ -272,18 +276,24 @@ export default function PublicPaymentPage() {
         const encodedSlug =
           encodeURIComponent(slug);
 
+        // IMPORTANT :
+        // API_URL = http://localhost:5000/api
+        //
+        // On ajoute seulement :
+        // /public/payment-pages/:slug
+        const url =
+          `${API_URL}/public/payment-pages/${encodedSlug}`;
+
         console.log(
           "🔎 Chargement page publique :",
-          slug
+          url
         );
 
-        const response = await fetch(
-          `${API_URL}/api/public/payment-pages/${encodedSlug}`,
-          {
+        const response =
+          await fetch(url, {
             method: "GET",
             cache: "no-store",
-          }
-        );
+          });
 
         let responseData: unknown = null;
 
@@ -377,7 +387,6 @@ export default function PublicPaymentPage() {
         });
 
         setFormValues(initialValues);
-
       } catch (err: unknown) {
         if (cancelled) {
           return;
@@ -407,7 +416,6 @@ export default function PublicPaymentPage() {
     };
   }, [slug]);
 
-
   // ===================================================
   // PRODUIT
   // ===================================================
@@ -415,12 +423,8 @@ export default function PublicPaymentPage() {
   const product =
     data?.product ?? null;
 
-
   // ===================================================
   // CHAMPS DU PRODUIT
-  //
-  // IMPORTANT :
-  // Chaque produit possède SES propres champs.
   // ===================================================
 
   const productFields =
@@ -428,10 +432,8 @@ export default function PublicPaymentPage() {
       ? product.fields
       : [];
 
-
   const hasFields =
     productFields.length > 0;
-
 
   // ===================================================
   // FORMATEUR
@@ -440,14 +442,12 @@ export default function PublicPaymentPage() {
   const instructor =
     data?.instructor ?? null;
 
-
   // ===================================================
-  // ENTREPRISE / ÉCOLE
+  // ENTREPRISE
   // ===================================================
 
   const company =
     data?.company ?? null;
-
 
   // ===================================================
   // MODIFIER UN CHAMP
@@ -462,7 +462,6 @@ export default function PublicPaymentPage() {
       [fieldName]: value,
     }));
   }
-
 
   // ===================================================
   // VALIDATION
@@ -493,9 +492,8 @@ export default function PublicPaymentPage() {
     return null;
   }
 
-
   // ===================================================
-  // NORMALISATION TÉLÉPHONE
+  // NORMALISATION TÉLÉPHONE DRC
   // ===================================================
 
   function normalizePhone(
@@ -529,7 +527,6 @@ export default function PublicPaymentPage() {
     return cleaned;
   }
 
-
   // ===================================================
   // PAIEMENT
   // ===================================================
@@ -549,9 +546,8 @@ export default function PublicPaymentPage() {
     setPaymentMessage(null);
     setPaymentSuccess(false);
 
-
     // =================================================
-    // VALIDATION DES CHAMPS
+    // VALIDATION CHAMPS
     // =================================================
 
     const fieldsError =
@@ -564,9 +560,8 @@ export default function PublicPaymentPage() {
       return;
     }
 
-
     // =================================================
-    // VALIDATION MOBILE MONEY
+    // VALIDATION TÉLÉCOM
     // =================================================
 
     if (!telecom) {
@@ -576,6 +571,9 @@ export default function PublicPaymentPage() {
       return;
     }
 
+    // =================================================
+    // NORMALISATION PHONE
+    // =================================================
 
     const normalizedPhone =
       normalizePhone(phone);
@@ -585,15 +583,13 @@ export default function PublicPaymentPage() {
       !normalizedPhone.startsWith("243")
     ) {
       setPaymentMessage(
-        "Veuillez entrer un numéro Mobile Money valide."
+        "Veuillez entrer un numéro Mobile Money valide. Exemple : 243812345678."
       );
       return;
     }
 
-
     try {
       setPaying(true);
-
 
       // =================================================
       // DONNÉES CLIENT
@@ -611,32 +607,31 @@ export default function PublicPaymentPage() {
         telecom,
       };
 
-
       // =================================================
-      // RÉCUPÉRER LES INFORMATIONS PRINCIPALES
+      // NOM CLIENT
       // =================================================
 
       const customerName =
         typeof formValues.name ===
-          "string"
+        "string"
           ? formValues.name
           : typeof formValues.fullName ===
               "string"
             ? formValues.fullName
             : undefined;
 
+      // =================================================
+      // EMAIL CLIENT
+      // =================================================
+
       const customerEmail =
         typeof formValues.email ===
-          "string"
+        "string"
           ? formValues.email
           : undefined;
 
-
       // =================================================
       // PAYLOAD
-      //
-      // Le backend pourra utiliser ces données
-      // pour créer Customer + Payment + Enrollment.
       // =================================================
 
       const payload = {
@@ -670,25 +665,35 @@ export default function PublicPaymentPage() {
           customerData,
       };
 
-
       console.log(
         "💳 PAYMENT PAYLOAD:",
         payload
       );
-
 
       // =================================================
       // APPEL API
       // =================================================
       //
       // IMPORTANT :
-      // Adapte cette URL si ton endpoint de paiement
-      // porte un autre nom.
+      //
+      // API_URL :
+      // http://localhost:5000/api
+      //
+      // URL finale :
+      // http://localhost:5000/api/public/payments
       // =================================================
+
+      const paymentUrl =
+        `${API_URL}/public/payments`;
+
+      console.log(
+        "💰 PAYMENT URL:",
+        paymentUrl
+      );
 
       const response =
         await fetch(
-          `${API_URL}/api/public/payments`,
+          paymentUrl,
           {
             method: "POST",
 
@@ -702,7 +707,6 @@ export default function PublicPaymentPage() {
           }
         );
 
-
       let result: unknown = null;
 
       try {
@@ -712,12 +716,10 @@ export default function PublicPaymentPage() {
         result = null;
       }
 
-
       console.log(
         "📦 PAYMENT RESPONSE:",
         result
       );
-
 
       if (!response.ok) {
         const message =
@@ -739,7 +741,6 @@ export default function PublicPaymentPage() {
         throw new Error(message);
       }
 
-
       // =================================================
       // SUCCÈS
       // =================================================
@@ -749,7 +750,6 @@ export default function PublicPaymentPage() {
       setPaymentMessage(
         "Votre demande de paiement a été envoyée avec succès."
       );
-
     } catch (err: unknown) {
       console.error(
         "❌ PAYMENT ERROR:",
@@ -768,52 +768,44 @@ export default function PublicPaymentPage() {
     }
   }
 
-
   // ===================================================
-  // CHARGEMENT
+  // LOADING
   // ===================================================
 
   if (loading) {
     return (
       <main className="min-h-screen bg-slate-50 px-4 py-12">
         <div className="mx-auto max-w-5xl">
-
           <div className="animate-pulse">
-
             <div className="h-10 w-64 rounded-lg bg-slate-200" />
 
             <div className="mt-4 h-5 w-96 max-w-full rounded bg-slate-200" />
 
             <div className="mt-10 grid gap-8 lg:grid-cols-2">
-
               <div className="h-[450px] rounded-3xl bg-white" />
 
               <div className="h-[450px] rounded-3xl bg-white" />
-
             </div>
-
           </div>
-
         </div>
       </main>
     );
   }
 
-
   // ===================================================
   // ERREUR
   // ===================================================
 
-  if (error || !data || !product) {
+  if (
+    error ||
+    !data ||
+    !product
+  ) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-slate-50 px-4">
-
         <div className="w-full max-w-lg rounded-3xl bg-white p-8 text-center shadow-sm">
-
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-red-100 text-red-600">
-
             <AlertCircle size={32} />
-
           </div>
 
           <h1 className="mt-6 text-2xl font-bold text-[#08192D]">
@@ -827,19 +819,18 @@ export default function PublicPaymentPage() {
 
           <button
             type="button"
-            onClick={() => window.history.back()}
+            onClick={() =>
+              window.history.back()
+            }
             className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[#08192D] px-5 py-3 font-semibold text-white hover:bg-[#102c4e]"
           >
             <ArrowLeft size={18} />
             Retour
           </button>
-
         </div>
-
       </main>
     );
   }
-
 
   // ===================================================
   // RENDU
@@ -847,19 +838,14 @@ export default function PublicPaymentPage() {
 
   return (
     <main className="min-h-screen bg-slate-50">
-
       {/* =================================================
           HEADER
       ================================================= */}
 
       <header className="border-b bg-white">
-
         <div className="mx-auto max-w-6xl px-4 py-5 sm:px-6">
-
           <div className="flex items-center justify-between gap-4">
-
             <div className="flex items-center gap-3">
-
               {company?.logo ? (
                 <img
                   src={company.logo}
@@ -871,7 +857,8 @@ export default function PublicPaymentPage() {
                 />
               ) : (
                 <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#08192D] text-lg font-bold text-white">
-                  {(company?.name ||
+                  {(
+                    company?.name ||
                     instructor?.name ||
                     product.name ||
                     "P"
@@ -882,7 +869,6 @@ export default function PublicPaymentPage() {
               )}
 
               <div>
-
                 <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
                   {company?.name ||
                     "Paiement sécurisé"}
@@ -893,47 +879,35 @@ export default function PublicPaymentPage() {
                     instructor?.name ||
                     "Formation / Service"}
                 </p>
-
               </div>
-
             </div>
 
             <div className="hidden items-center gap-2 text-sm text-slate-500 sm:flex">
-
               <ShieldCheck
                 size={18}
                 className="text-green-600"
               />
 
               Paiement sécurisé
-
             </div>
-
           </div>
-
         </div>
-
       </header>
-
 
       {/* =================================================
           CONTENU
       ================================================= */}
 
       <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:py-12">
-
         <div className="grid gap-8 lg:grid-cols-[1fr_0.85fr]">
-
-
           {/* =================================================
-              INFORMATIONS PRODUIT
+              PRODUIT
           ================================================= */}
 
           <section>
-
             {/* IMAGE */}
-            <div className="overflow-hidden rounded-3xl bg-white shadow-sm">
 
+            <div className="overflow-hidden rounded-3xl bg-white shadow-sm">
               {product.imageUrl ? (
                 <img
                   src={product.imageUrl}
@@ -942,32 +916,24 @@ export default function PublicPaymentPage() {
                 />
               ) : (
                 <div className="flex h-[280px] items-center justify-center bg-gradient-to-br from-[#08192D] to-[#16385f] sm:h-[380px]">
-
                   <div className="text-center text-white">
-
                     <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-white/10 text-3xl font-bold backdrop-blur">
-
                       {product.name
                         .charAt(0)
                         .toUpperCase()}
-
                     </div>
 
                     <p className="mt-4 text-lg font-semibold">
                       {product.name}
                     </p>
-
                   </div>
-
                 </div>
               )}
-
             </div>
 
-
             {/* INFORMATIONS */}
-            <div className="mt-6">
 
+            <div className="mt-6">
               <span className="inline-flex rounded-full bg-slate-100 px-3 py-1 text-sm font-semibold text-slate-600">
                 {formatProductType(
                   product.type
@@ -990,20 +956,16 @@ export default function PublicPaymentPage() {
                 </div>
               )}
 
-
-              {/* FORMATEUR / ÉTABLISSEMENT */}
+              {/* FORMATEUR */}
 
               {(instructor ||
                 company) && (
-
                 <div className="mt-8 rounded-2xl border border-slate-200 bg-white p-5">
-
                   <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
                     Présenté par
                   </p>
 
                   <div className="mt-4 flex items-center gap-4">
-
                     {company?.logo ? (
                       <img
                         src={
@@ -1024,7 +986,6 @@ export default function PublicPaymentPage() {
                     )}
 
                     <div>
-
                       <h2 className="font-bold text-[#08192D]">
                         {company?.name ||
                           instructor?.name ||
@@ -1043,7 +1004,6 @@ export default function PublicPaymentPage() {
 
                       {company?.address && (
                         <p className="mt-1 flex items-center gap-1 text-sm text-slate-500">
-
                           <MapPin
                             size={14}
                           />
@@ -1051,40 +1011,29 @@ export default function PublicPaymentPage() {
                           {
                             company.address
                           }
-
                         </p>
                       )}
-
                     </div>
-
                   </div>
-
                 </div>
-
               )}
-
             </div>
-
           </section>
-
 
           {/* =================================================
               PAIEMENT
           ================================================= */}
 
           <section>
-
             <form
               onSubmit={
                 handlePayment
               }
               className="rounded-3xl bg-white p-6 shadow-sm sm:p-8"
             >
-
               {/* PRIX */}
 
               <div className="border-b border-slate-100 pb-6">
-
                 <p className="text-sm font-medium text-slate-500">
                   Montant à payer
                 </p>
@@ -1095,36 +1044,28 @@ export default function PublicPaymentPage() {
                     product.currency
                   )}
                 </div>
-
               </div>
-
 
               {/* =================================================
                   FORMULAIRE DYNAMIQUE
               ================================================= */}
 
               {hasFields && (
-
                 <div className="pt-6">
-
                   <div className="mb-6">
-
                     <h2 className="text-xl font-bold text-[#08192D]">
-                      Informations d'inscription
+                      Informations
+                      d'inscription
                     </h2>
 
                     <p className="mt-1 text-sm text-slate-500">
                       Veuillez renseigner les informations demandées.
                     </p>
-
                   </div>
 
-
                   <div className="space-y-5">
-
                     {productFields.map(
                       (field) => {
-
                         const fieldType =
                           getFieldType(
                             field.type
@@ -1138,10 +1079,7 @@ export default function PublicPaymentPage() {
                         const inputId =
                           `field-${field.id}`;
 
-
-                        // =====================================
                         // BOOLEAN
-                        // =====================================
 
                         if (
                           fieldType ===
@@ -1157,7 +1095,6 @@ export default function PublicPaymentPage() {
                               }
                               className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200 p-4"
                             >
-
                               <input
                                 id={
                                   inputId
@@ -1181,25 +1118,21 @@ export default function PublicPaymentPage() {
                               />
 
                               <span className="text-sm text-slate-700">
-
-                                {field.label}
+                                {
+                                  field.label
+                                }
 
                                 {field.required && (
                                   <span className="ml-1 text-red-500">
                                     *
                                   </span>
                                 )}
-
                               </span>
-
                             </label>
                           );
                         }
 
-
-                        // =====================================
                         // TEXTAREA
-                        // =====================================
 
                         if (
                           fieldType ===
@@ -1211,14 +1144,12 @@ export default function PublicPaymentPage() {
                                 field.id
                               }
                             >
-
                               <label
                                 htmlFor={
                                   inputId
                                 }
                                 className="mb-2 block text-sm font-semibold text-[#08192D]"
                               >
-
                                 {
                                   field.label
                                 }
@@ -1228,7 +1159,6 @@ export default function PublicPaymentPage() {
                                     *
                                   </span>
                                 )}
-
                               </label>
 
                               <textarea
@@ -1251,23 +1181,17 @@ export default function PublicPaymentPage() {
                                       .value
                                   )
                                 }
-                                rows={
-                                  4
-                                }
+                                rows={4}
                                 required={
                                   field.required
                                 }
                                 className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-[#08192D] focus:ring-2 focus:ring-[#08192D]/10"
                               />
-
                             </div>
                           );
                         }
 
-
-                        // =====================================
                         // SELECT
-                        // =====================================
 
                         if (
                           fieldType ===
@@ -1319,14 +1243,12 @@ export default function PublicPaymentPage() {
                                 field.id
                               }
                             >
-
                               <label
                                 htmlFor={
                                   inputId
                                 }
                                 className="mb-2 block text-sm font-semibold text-[#08192D]"
                               >
-
                                 {
                                   field.label
                                 }
@@ -1336,7 +1258,6 @@ export default function PublicPaymentPage() {
                                     *
                                   </span>
                                 )}
-
                               </label>
 
                               <select
@@ -1364,7 +1285,6 @@ export default function PublicPaymentPage() {
                                 }
                                 className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-[#08192D] focus:ring-2 focus:ring-[#08192D]/10"
                               >
-
                                 <option value="">
                                   Sélectionner...
                                 </option>
@@ -1387,17 +1307,12 @@ export default function PublicPaymentPage() {
                                     </option>
                                   )
                                 )}
-
                               </select>
-
                             </div>
                           );
                         }
 
-
-                        // =====================================
                         // IMAGE / FILE
-                        // =====================================
 
                         if (
                           fieldType ===
@@ -1411,14 +1326,12 @@ export default function PublicPaymentPage() {
                                 field.id
                               }
                             >
-
                               <label
                                 htmlFor={
                                   inputId
                                 }
                                 className="mb-2 block text-sm font-semibold text-[#08192D]"
                               >
-
                                 {
                                   field.label
                                 }
@@ -1428,7 +1341,6 @@ export default function PublicPaymentPage() {
                                     *
                                   </span>
                                 )}
-
                               </label>
 
                               <input
@@ -1449,7 +1361,6 @@ export default function PublicPaymentPage() {
                                 onChange={(
                                   event
                                 ) => {
-
                                   const file =
                                     event
                                       .target
@@ -1461,18 +1372,13 @@ export default function PublicPaymentPage() {
                                       ? file.name
                                       : ""
                                   );
-
                                 }}
                               />
-
                             </div>
                           );
                         }
 
-
-                        // =====================================
                         // INPUT STANDARD
-                        // =====================================
 
                         let inputType =
                           "text";
@@ -1509,21 +1415,18 @@ export default function PublicPaymentPage() {
                             "date";
                         }
 
-
                         return (
                           <div
                             key={
                               field.id
                             }
                           >
-
                             <label
                               htmlFor={
                                 inputId
                               }
                               className="mb-2 block text-sm font-semibold text-[#08192D]"
                             >
-
                               {
                                 field.label
                               }
@@ -1533,11 +1436,9 @@ export default function PublicPaymentPage() {
                                   *
                                 </span>
                               )}
-
                             </label>
 
                             <div className="relative">
-
                               {fieldType ===
                                 "EMAIL" && (
                                 <Mail
@@ -1601,39 +1502,29 @@ export default function PublicPaymentPage() {
                                 }
                                 className="w-full rounded-xl border border-slate-200 py-3 pl-11 pr-4 outline-none transition focus:border-[#08192D] focus:ring-2 focus:ring-[#08192D]/10"
                               />
-
                             </div>
-
                           </div>
                         );
                       }
                     )}
-
                   </div>
-
                 </div>
               )}
 
-
               {/* =================================================
-                  SI AUCUN CHAMP
+                  AUCUN CHAMP
               ================================================= */}
 
               {!hasFields && (
-
                 <div className="pt-6">
-
                   <div className="rounded-2xl bg-slate-50 p-5">
-
                     <div className="flex items-start gap-3">
-
                       <CheckCircle2
                         size={22}
                         className="mt-0.5 shrink-0 text-green-600"
                       />
 
                       <div>
-
                         <p className="font-semibold text-[#08192D]">
                           Achat direct
                         </p>
@@ -1641,23 +1532,17 @@ export default function PublicPaymentPage() {
                         <p className="mt-1 text-sm leading-6 text-slate-500">
                           Aucun renseignement supplémentaire n'est nécessaire pour ce produit.
                         </p>
-
                       </div>
-
                     </div>
-
                   </div>
-
                 </div>
               )}
-
 
               {/* =================================================
                   PAIEMENT
               ================================================= */}
 
               <div className="mt-8 border-t border-slate-100 pt-6">
-
                 <h2 className="text-xl font-bold text-[#08192D]">
                   Paiement
                 </h2>
@@ -1666,11 +1551,9 @@ export default function PublicPaymentPage() {
                   Choisissez votre moyen de paiement.
                 </p>
 
-
                 {/* MOBILE MONEY */}
 
                 <div className="mt-5 grid grid-cols-2 gap-3">
-
                   <button
                     type="button"
                     onClick={() =>
@@ -1684,7 +1567,6 @@ export default function PublicPaymentPage() {
                   >
                     Airtel Money
                   </button>
-
 
                   <button
                     type="button"
@@ -1700,7 +1582,6 @@ export default function PublicPaymentPage() {
                     Orange Money
                   </button>
 
-
                   <button
                     type="button"
                     onClick={() =>
@@ -1715,7 +1596,6 @@ export default function PublicPaymentPage() {
                     M-Pesa
                   </button>
 
-
                   <button
                     type="button"
                     onClick={() =>
@@ -1729,14 +1609,11 @@ export default function PublicPaymentPage() {
                   >
                     Afrimoney
                   </button>
-
                 </div>
-
 
                 {/* NUMÉRO */}
 
                 <div className="mt-5">
-
                   <label
                     htmlFor="payment-phone"
                     className="mb-2 block text-sm font-semibold text-[#08192D]"
@@ -1748,7 +1625,6 @@ export default function PublicPaymentPage() {
                   </label>
 
                   <div className="relative">
-
                     <Phone
                       size={18}
                       className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
@@ -1767,20 +1643,16 @@ export default function PublicPaymentPage() {
                       required
                       className="w-full rounded-xl border border-slate-200 py-3 pl-11 pr-4 outline-none transition focus:border-[#08192D] focus:ring-2 focus:ring-[#08192D]/10"
                     />
-
                   </div>
 
                   <p className="mt-2 text-xs text-slate-400">
-                    Exemple : 243XXXXXXXXX
+                    Exemple : 243812345678
                   </p>
-
                 </div>
-
 
                 {/* MESSAGE */}
 
                 {paymentMessage && (
-
                   <div
                     className={`mt-5 flex items-start gap-3 rounded-xl p-4 text-sm ${
                       paymentSuccess
@@ -1788,7 +1660,6 @@ export default function PublicPaymentPage() {
                         : "bg-red-50 text-red-700"
                     }`}
                   >
-
                     {paymentSuccess ? (
                       <CheckCircle2
                         size={20}
@@ -1806,10 +1677,8 @@ export default function PublicPaymentPage() {
                         paymentMessage
                       }
                     </p>
-
                   </div>
                 )}
-
 
                 {/* BOUTON */}
 
@@ -1818,7 +1687,6 @@ export default function PublicPaymentPage() {
                   disabled={paying}
                   className="mt-6 flex w-full items-center justify-center gap-3 rounded-2xl bg-[#08192D] px-6 py-4 text-base font-bold text-white transition hover:bg-[#102c4e] disabled:cursor-not-allowed disabled:opacity-60"
                 >
-
                   {paying ? (
                     <>
                       <Loader2
@@ -1826,8 +1694,8 @@ export default function PublicPaymentPage() {
                         className="animate-spin"
                       />
 
-                      Traitement du paiement...
-
+                      Traitement du
+                      paiement...
                     </>
                   ) : (
                     <>
@@ -1836,35 +1704,25 @@ export default function PublicPaymentPage() {
                       />
 
                       Payer maintenant
-
                     </>
                   )}
-
                 </button>
-
 
                 {/* SÉCURITÉ */}
 
                 <div className="mt-5 flex items-center justify-center gap-2 text-center text-xs text-slate-400">
-
                   <ShieldCheck
                     size={15}
                   />
 
-                  Vos informations sont protégées.
-
+                  Vos informations sont
+                  protégées.
                 </div>
-
               </div>
-
             </form>
-
           </section>
-
         </div>
-
       </div>
-
     </main>
   );
 }

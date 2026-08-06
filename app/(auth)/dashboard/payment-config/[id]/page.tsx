@@ -54,11 +54,16 @@ interface PaymentConfiguration {
 
   status: string;
   active: boolean;
+  
 }
-
 interface ApiResponse {
   success: boolean;
+
   message?: string;
+
+  code?: string;
+
+  redirect?: string;
 
   product?: Product;
 
@@ -560,12 +565,28 @@ const productId =
       --------------------------------------------- */
 
       if (!response.ok) {
-        throw new Error(
-          data?.message ||
-            "Impossible d'enregistrer la configuration."
-        );
-      }
 
+
+  if (
+    data?.code === "SUBSCRIPTION_REQUIRED"
+  ) {
+
+    router.push(
+      "/dashboard/subscription"
+    );
+
+    return;
+
+  }
+
+
+
+  throw new Error(
+    data?.message ||
+      "Impossible d'enregistrer la configuration."
+  );
+
+}
       /* ---------------------------------------------
          SUCCESS ERROR
       --------------------------------------------- */

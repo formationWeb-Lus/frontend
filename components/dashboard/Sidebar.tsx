@@ -1,8 +1,10 @@
+
 "use client";
 
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
+
 import {
   LayoutDashboard,
   CreditCard,
@@ -13,15 +15,31 @@ import {
   Settings,
   LogOut,
   WalletCards,
+  Megaphone,
+  Building2,
 } from "lucide-react";
 
 
+// =====================================================
+// MENU
+// =====================================================
+
 const menuItems = [
+
+  // ===================================================
+  // DASHBOARD
+  // ===================================================
+
   {
     name: "Dashboard",
     href: "/dashboard",
     icon: LayoutDashboard,
   },
+
+
+  // ===================================================
+  // PRODUITS
+  // ===================================================
 
   {
     name: "Produits",
@@ -29,11 +47,39 @@ const menuItems = [
     icon: ShoppingBag,
   },
 
+
+  // ===================================================
+  // PROMOTION
+  // ===================================================
+
+  {
+    name: "Promouvoir mes produits",
+    href: "/marketing/products",
+    icon: Megaphone,
+  },
+
+
+  // ===================================================
+  // PAIEMENTS
+  // ===================================================
+
   {
     name: "Pages de paiement",
     href: "/dashboard/payment-pages",
     icon: WalletCards,
   },
+
+
+  {
+    name: "Modes de paiement",
+    href: "/dashboard/payment-config",
+    icon: CreditCard,
+  },
+
+
+  // ===================================================
+  // TRANSACTIONS
+  // ===================================================
 
   {
     name: "Transactions",
@@ -41,11 +87,32 @@ const menuItems = [
     icon: ReceiptText,
   },
 
+
+  // ===================================================
+  // CLIENTS
+  // ===================================================
+
   {
     name: "Clients",
     href: "/dashboard/customers",
     icon: Users,
   },
+
+
+  // ===================================================
+  // ENTREPRISE
+  // ===================================================
+
+  {
+    name: "Mon entreprise",
+    href: "/p/jures",
+    icon: Building2,
+  },
+
+
+  // ===================================================
+  // API
+  // ===================================================
 
   {
     name: "Clés API",
@@ -53,30 +120,41 @@ const menuItems = [
     icon: KeyRound,
   },
 
+
+  // ===================================================
+  // ABONNEMENT
+  // ===================================================
+
   {
     name: "Abonnement",
     href: "/dashboard/subscriptions",
     icon: CreditCard,
   },
 
+
+  // ===================================================
+  // PARAMÈTRES
+  // ===================================================
+
   {
     name: "Paramètres",
     href: "/dashboard/settings",
     icon: Settings,
   },
+
 ];
 
 
+// =====================================================
+// SIDEBAR
+// =====================================================
 
 export default function Sidebar() {
-
 
   const pathname = usePathname();
 
 
-
   return (
-
 
     <aside
       className="
@@ -95,10 +173,9 @@ export default function Sidebar() {
     >
 
 
-
-
+      {/* ================================================= */}
       {/* LOGO */}
-
+      {/* ================================================= */}
 
       <Link
         href="/"
@@ -111,15 +188,10 @@ export default function Sidebar() {
       >
 
         <Image
-
           src="/images/logo.png"
-
           alt="PayLink"
-
           width={45}
-
           height={45}
-
         />
 
 
@@ -130,110 +202,97 @@ export default function Sidebar() {
             text-white
           "
         >
-          PayLink
-        </span>
 
+          PayLink
+
+        </span>
 
       </Link>
 
 
-
-
-
-
-
+      {/* ================================================= */}
       {/* MENU */}
-
+      {/* ================================================= */}
 
       <nav
         className="
           flex-1
           space-y-2
+          overflow-y-auto
+          pr-1
         "
       >
 
+        {menuItems.map((item) => {
 
-        {
-          menuItems.map((item) => {
-
-
-            const Icon = item.icon;
+          const Icon = item.icon;
 
 
-            const active =
-              pathname === item.href;
+          // =================================================
+          // PAGE ACTIVE
+          // =================================================
 
-
-
-            return (
-
-              <Link
-
-                key={item.href}
-
-                href={item.href}
-
-
-                className={`
-                  flex
-                  items-center
-                  gap-4
-                  rounded-xl
-                  px-4
-                  py-3
-                  text-sm
-                  font-medium
-                  transition
-
-                  ${
-                    active
-
-                    ?
-
-                    "bg-yellow-400 text-[#08192D]"
-
-                    :
-
-                    "text-slate-300 hover:bg-white/10 hover:text-white"
-
-                  }
-
-                `}
-
-              >
-
-
-                <Icon size={20}/>
-
-
-                {item.name}
-
-
-
-              </Link>
-
-
+          const active =
+            pathname === item.href ||
+            pathname.startsWith(
+              item.href + "/"
             );
 
 
-          })
-        }
+          return (
+
+            <Link
+              key={item.href}
+              href={item.href}
+              className={`
+                flex
+                items-center
+                gap-4
+                rounded-xl
+                px-4
+                py-3
+                text-sm
+                font-medium
+                transition-all
+                duration-200
+
+                ${
+                  active
+                    ? "bg-yellow-400 text-[#08192D] shadow-sm"
+                    : "text-slate-300 hover:bg-white/10 hover:text-white"
+                }
+              `}
+            >
+
+              <Icon
+                size={20}
+                strokeWidth={2}
+              />
 
 
+              <span>
+
+                {item.name}
+
+              </span>
+
+
+            </Link>
+
+          );
+
+        })}
 
       </nav>
 
 
-
-
-
-
-
+      {/* ================================================= */}
       {/* PROFIL */}
-
+      {/* ================================================= */}
 
       <div
         className="
+          mt-6
           rounded-2xl
           bg-white/10
           p-4
@@ -247,7 +306,9 @@ export default function Sidebar() {
             text-white
           "
         >
+
           Mon compte
+
         </p>
 
 
@@ -258,13 +319,18 @@ export default function Sidebar() {
             text-slate-400
           "
         >
+
           Entreprise PayLink
+
         </p>
 
 
-
+        {/* ================================================= */}
+        {/* DECONNEXION */}
+        {/* ================================================= */}
 
         <button
+          type="button"
           className="
             mt-4
             flex
@@ -278,25 +344,21 @@ export default function Sidebar() {
             text-red-400
             transition
             hover:bg-white/10
+            hover:text-red-300
           "
         >
 
-          <LogOut size={18}/>
+          <LogOut
+            size={18}
+          />
 
           Déconnexion
 
-
         </button>
-
-
 
       </div>
 
-
-
-
     </aside>
-
 
   );
 

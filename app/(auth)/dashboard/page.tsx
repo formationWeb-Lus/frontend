@@ -109,20 +109,20 @@ export default function DashboardPage() {
                 // -----------------------------------------
                 // TOKEN
                 // -----------------------------------------
-
-                const token =
-                    localStorage.getItem("token");
-
-
-                if (!token) {
-
-                    router.replace("/login");
-
-                    return;
-
-                }
+const token =
+    document.cookie
+      .split("; ")
+      .find(row => row.startsWith("token="))
+      ?.split("=")[1];
 
 
+if (!token) {
+
+    router.replace("/login");
+
+    return;
+
+}
                 // -----------------------------------------
                 // API /ME
                 // -----------------------------------------
@@ -150,25 +150,27 @@ export default function DashboardPage() {
                 // TOKEN INVALIDE
                 // -----------------------------------------
 
-                if (
-                    response.status === 401 ||
-                    response.status === 403
-                ) {
+                
+if (
+    response.status === 401 ||
+    response.status === 403
+) {
 
-                    localStorage.removeItem(
-                        "token"
-                    );
+    document.cookie =
+    "token=; path=/; max-age=0";
 
-                    localStorage.removeItem(
-                        "user"
-                    );
 
-                    router.replace("/login");
+    localStorage.removeItem(
+        "user"
+    );
 
-                    return;
 
-                }
+    router.replace("/login");
 
+
+    return;
+
+}
 
                 // -----------------------------------------
                 // AUTRE ERREUR

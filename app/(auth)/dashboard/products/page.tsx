@@ -244,17 +244,30 @@ export default function ProductsPage() {
      TOKEN
   ======================================================= */
 
-  const getToken = (): string | null => {
-    if (typeof window === "undefined") {
-      return null;
-    }
+  /* =======================================================
+   TOKEN
+======================================================= */
 
-    return (
-      localStorage.getItem("token") ||
-      localStorage.getItem("accessToken")
-    );
-  };
+const getToken = (): string | null => {
 
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+
+  const cookieToken =
+    document.cookie
+      .split("; ")
+      .find(
+        (row) =>
+          row.startsWith("token=")
+      )
+      ?.split("=")[1];
+
+
+  return cookieToken || null;
+
+};
   /* =======================================================
      CALCULATE STATISTICS
   ======================================================= */
@@ -999,28 +1012,24 @@ export default function ProductsPage() {
 
                       </div>
 
-                      {/* =================================
-                          PUBLIC PAGE
-                      ================================= */}
 
-                      {publicUrl && (
-
-                        <a
-                          href={
-                            publicUrl
-                          }
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="mt-2 w-full inline-flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl bg-gray-900 text-white hover:bg-gray-800 text-sm font-medium"
-                        >
-                          <ExternalLink
-                            size={16}
-                          />
-
-                          Voir la page publique
-                        </a>
-
-                      )}
+                      {!publicUrl ? (
+  <Link
+    href={`/dashboard/payment-pages/create?productId=${product.id}`}
+    className="mt-2 w-full inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-3 py-2.5 text-sm font-semibold text-white hover:bg-blue-700"
+  >
+    <Plus size={16} />
+    Créer une page de paiement
+  </Link>
+) : (
+  <Link
+    href="/dashboard/payment-pages/create"
+    className="mt-2 w-full inline-flex items-center justify-center gap-2 rounded-xl bg-green-600 px-3 py-2.5 text-sm font-semibold text-white hover:bg-green-700"
+  >
+    <ExternalLink size={16} />
+    Gérer la page de paiement
+  </Link>
+)}
 
                       {/* =================================
                           PUBLISH

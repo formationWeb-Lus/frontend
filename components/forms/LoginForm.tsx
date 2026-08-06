@@ -6,6 +6,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
+
 import {
   Eye,
   EyeOff,
@@ -15,11 +16,13 @@ import {
 } from "lucide-react";
 
 
+
 const loginSchema = z.object({
 
   email: z
     .string()
     .email("Adresse email invalide"),
+
 
   password: z
     .string()
@@ -28,20 +31,44 @@ const loginSchema = z.object({
 });
 
 
-type LoginFormData = z.infer<typeof loginSchema>;
+
+type LoginFormData =
+  z.infer<typeof loginSchema>;
+
+
 
 
 
 export default function LoginForm() {
 
+
   const router = useRouter();
 
-  const [showPassword, setShowPassword] = useState(false);
+
+  const [showPassword, setShowPassword] =
+    useState(false);
+
+
+
+  const [message, setMessage] =
+    useState("");
+
+
+
+  const [messageType, setMessageType] =
+    useState<
+      "success" | "error" | ""
+    >("");
+
+
 
 
   const {
+
     register,
+
     handleSubmit,
+
     formState: {
       errors,
       isSubmitting,
@@ -49,7 +76,8 @@ export default function LoginForm() {
 
   } = useForm<LoginFormData>({
 
-    resolver: zodResolver(loginSchema),
+    resolver:
+      zodResolver(loginSchema),
 
   });
 
@@ -57,19 +85,23 @@ export default function LoginForm() {
 
 
 
-  async function onSubmit(data: LoginFormData) {
 
+async function onSubmit(data: LoginFormData) {
   try {
+    setMessage("");
+    setMessageType("");
+
+    const API_URL =
+      process.env.NEXT_PUBLIC_API_URL ||
+      "http://localhost:5000/api";
 
     const response = await fetch(
-      "http://localhost:5000/api/auth/login",
+      `${API_URL}/auth/login`,
       {
         method: "POST",
-
         headers: {
           "Content-Type": "application/json",
         },
-
         body: JSON.stringify({
           email: data.email,
           password: data.password,
@@ -77,55 +109,76 @@ export default function LoginForm() {
       }
     );
 
-
     const result = await response.json();
 
-
     if (!response.ok) {
-
-      alert(
-        result.message || 
-        "Email ou mot de passe incorrect"
+      setMessage(
+        result.message ||
+          "Email ou mot de passe incorrect."
       );
 
+      setMessageType("error");
       return;
     }
 
-
-    // Sauvegarde du token si ton backend en retourne un
-    if (result.token) {
-
-      localStorage.setItem(
-        "token",
-        result.token
+    if (!result.success || !result.token) {
+      setMessage(
+        result.message ||
+          "Connexion impossible."
       );
 
+      setMessageType("error");
+      return;
     }
 
+    // =====================================
+    // Sauvegarde du token
+    // =====================================
 
-    alert("Connexion réussie");
-
-
-    router.push("/dashboard");
-
-
-  } catch (error) {
-
-    console.error(error);
-
-    alert(
-      "Impossible de contacter le serveur"
+    localStorage.setItem(
+      "token",
+      result.token
     );
 
+    // =====================================
+    // Sauvegarde de l'utilisateur
+    // =====================================
+
+    if (result.user) {
+      localStorage.setItem(
+        "user",
+        JSON.stringify(result.user)
+      );
+    }
+
+    // =====================================
+    // Cookie
+    // =====================================
+
+    document.cookie = `token=${result.token}; path=/; max-age=604800; SameSite=Lax`;
+
+    console.log(
+      "TOKEN ENREGISTRÉ :",
+      localStorage.getItem("token")
+    );
+
+    setMessage("Connexion réussie.");
+
+    setMessageType("success");
+
+    setTimeout(() => {
+      router.push("/dashboard");
+    }, 800);
+  } catch (error) {
+    console.error("LOGIN ERROR :", error);
+
+    setMessage(
+      "Impossible de contacter le serveur."
+    );
+
+    setMessageType("error");
   }
-
 }
-
-
-    // apres la vrai Connexion API à ajouter ici
-
-
-  
 
 
 
@@ -136,13 +189,49 @@ export default function LoginForm() {
 
     <form
 
-      onSubmit={handleSubmit(onSubmit)}
+      onSubmit={
+        handleSubmit(onSubmit)
+      }
 
       className="
         space-y-5
       "
 
     >
+
+
+
+      {/* MESSAGE FLASH */}
+
+
+      {message && (
+
+        <div
+
+          className={`
+            rounded-xl
+            p-3
+            text-sm
+            font-medium
+
+            ${
+              messageType === "success"
+              ? "bg-green-100 text-green-700"
+              : "bg-red-100 text-red-700"
+            }
+
+          `}
+
+        >
+
+          {message}
+
+
+        </div>
+
+
+      )}
+
 
 
 
@@ -154,17 +243,14 @@ export default function LoginForm() {
       <div>
 
 
-        <label
+        <label className="
+          mb-2
+          block
+          text-sm
+          font-semibold
+          text-slate-700
+        ">
 
-          className="
-            mb-2
-            block
-            text-sm
-            font-semibold
-            text-slate-700
-          "
-
-        >
 
           Adresse email
 
@@ -174,9 +260,7 @@ export default function LoginForm() {
 
 
 
-
         <div className="relative">
-
 
 
           <Mail
@@ -221,7 +305,6 @@ export default function LoginForm() {
               text-slate-900
               outline-none
               transition
-
               focus:border-yellow-400
               focus:bg-white
               focus:ring-4
@@ -238,18 +321,16 @@ export default function LoginForm() {
 
 
 
+
         {
           errors.email && (
 
-            <p
+            <p className="
+              mt-1
+              text-sm
+              text-red-500
+            ">
 
-              className="
-                mt-1
-                text-sm
-                text-red-500
-              "
-
-            >
 
               {errors.email.message}
 
@@ -269,27 +350,20 @@ export default function LoginForm() {
 
 
 
-
-
-      {/* MOT DE PASSE */}
-
+      {/* PASSWORD */}
 
 
       <div>
 
 
+        <label className="
+          mb-2
+          block
+          text-sm
+          font-semibold
+          text-slate-700
+        ">
 
-        <label
-
-          className="
-            mb-2
-            block
-            text-sm
-            font-semibold
-            text-slate-700
-          "
-
-        >
 
           Mot de passe
 
@@ -299,10 +373,7 @@ export default function LoginForm() {
 
 
 
-
-
         <div className="relative">
-
 
 
           <Lock
@@ -320,19 +391,13 @@ export default function LoginForm() {
           />
 
 
-
-
-
-          <input
-
-
+                    <input
 
             type={
               showPassword
               ? "text"
               : "password"
             }
-
 
 
             {...register("password")}
@@ -356,7 +421,6 @@ export default function LoginForm() {
               text-slate-900
               outline-none
               transition
-
               focus:border-yellow-400
               focus:bg-white
               focus:ring-4
@@ -378,9 +442,10 @@ export default function LoginForm() {
             type="button"
 
 
-
             onClick={() =>
-              setShowPassword(!showPassword)
+              setShowPassword(
+                !showPassword
+              )
             }
 
 
@@ -394,8 +459,8 @@ export default function LoginForm() {
             "
 
 
-
           >
+
 
 
             {
@@ -417,9 +482,7 @@ export default function LoginForm() {
 
 
 
-
         </div>
-
 
 
 
@@ -428,16 +491,12 @@ export default function LoginForm() {
         {
           errors.password && (
 
+            <p className="
+              mt-1
+              text-sm
+              text-red-500
+            ">
 
-            <p
-
-              className="
-                mt-1
-                text-sm
-                text-red-500
-              "
-
-            >
 
               {errors.password.message}
 
@@ -447,8 +506,6 @@ export default function LoginForm() {
 
           )
         }
-
-
 
 
 
@@ -463,15 +520,11 @@ export default function LoginForm() {
       {/* MOT DE PASSE OUBLIE */}
 
 
+      <div className="
+        flex
+        justify-end
+      ">
 
-      <div
-
-        className="
-          flex
-          justify-end
-        "
-
-      >
 
 
         <Link
@@ -489,7 +542,6 @@ export default function LoginForm() {
 
           Mot de passe oublié ?
 
-
         </Link>
 
 
@@ -503,7 +555,7 @@ export default function LoginForm() {
 
 
 
-      {/* BOUTON */}
+      {/* BOUTON CONNEXION */}
 
 
 
@@ -518,31 +570,18 @@ export default function LoginForm() {
 
 
         className="
-
           flex
-
           w-full
-
           items-center
-
           justify-center
-
           rounded-xl
-
           bg-[#08192D]
-
           py-3
-
           font-bold
-
           text-white
-
           transition
-
           hover:bg-[#102c4e]
-
           disabled:opacity-70
-
         "
 
 
@@ -551,10 +590,14 @@ export default function LoginForm() {
 
 
 
+
         {
+
           isSubmitting
 
+
           ?
+
 
           <Loader2
 
@@ -566,12 +609,15 @@ export default function LoginForm() {
 
           />
 
+
           :
+
 
           "Se connecter"
 
-        }
 
+
+        }
 
 
 
@@ -584,7 +630,7 @@ export default function LoginForm() {
     </form>
 
 
-
   );
+
 
 }

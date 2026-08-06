@@ -32,41 +32,25 @@ imageUrl: string | null;
 status: string;
 createdAt: string;
 }
-
 interface PaymentPage {
-id: number;
-userId: number;
-title: string;
-slug: string;
-description: string | null;
-active: boolean;
-createdAt: string;
+  id: number;
+  userId: number;
+  title: string;
+  slug: string;
+  description: string | null;
+  active: boolean;
+  createdAt: string;
 
-/*
-
-* Le backend peut retourner un produit
-* directement ou une structure différente.
-*
-* On garde le produit optionnel pour
-* éviter les erreurs frontend.
-  */
   product?: Product | null;
 
-/*
+  products?: {
+    productId: number;
+    paymentPageId: number;
+    product: Product;
+  }[];
 
-* Compatible avec un futur backend
-* retournant plusieurs produits.
-  */
-  products?: Product[];
-
-/*
-
-* Compatible avec les transactions
-* si elles sont retournées par l'API.
-  */
   transactions?: unknown[];
-  }
-
+}
 /* =====================================================
 API RESPONSE
 ===================================================== */
@@ -139,17 +123,27 @@ setError("");
     /* ===============================================
        TOKEN
     =============================================== */
+const getToken = (): string | null => {
+  if (typeof window === "undefined") {
+    return null;
+  }
 
-    const token =
-      localStorage.getItem("token") ||
-      localStorage.getItem("accessToken");
+  const token =
+    localStorage.getItem("token");
 
-    if (!token) {
-      throw new Error(
-        "Votre session a expiré. Veuillez vous reconnecter."
-      );
-    }
+  console.log("TOKEN FRONTEND :", token);
 
+  return token;
+};
+
+
+const token = getToken();
+
+if (!token) {
+  throw new Error(
+    "Votre session a expiré. Veuillez vous reconnecter."
+  );
+}
     /* ===============================================
        ROUTE
 
@@ -421,7 +415,7 @@ RENDER
 
 return ( <div className="space-y-8">
 
-```
+
   {/* =================================================
       HEADER
   ================================================= */}
@@ -683,9 +677,9 @@ return ( <div className="space-y-8">
            */
 
           const product =
-            page.product ||
-            page.products?.[0] ||
-            null;
+  page.product ||
+  page.products?.[0]?.product ||
+  null;
 
           const publicUrl =
             getPublicUrl(
@@ -887,15 +881,11 @@ return ( <div className="space-y-8">
 
                     <p className="mt-1 font-semibold text-[#08192D]">
 
-                      {product
-                        ? product.price.toLocaleString(
-                            "fr-FR"
-                          )
-                        : "—"}{" "}
+                    {typeof product?.price === "number"
+  ? product.price.toLocaleString("fr-FR")
+  : "—"}{" "}
 
-                      {product?.currency ||
-                        ""}
-
+{product?.currency ?? ""}
                     </p>
 
                   </div>

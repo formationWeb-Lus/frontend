@@ -224,19 +224,30 @@ export default function CreateProductPage() {
      TOKEN
   ======================================================= */
 
-  const getToken = () => {
-    if (
-      typeof window === "undefined"
-    ) {
-      return null;
-    }
+  /* =======================================================
+   TOKEN
+======================================================= */
 
-    return (
-      localStorage.getItem("token") ||
-      localStorage.getItem("accessToken")
-    );
-  };
+const getToken = (): string | null => {
 
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+
+  const cookieToken =
+    document.cookie
+      .split("; ")
+      .find(
+        (row) =>
+          row.startsWith("token=")
+      )
+      ?.split("=")[1];
+
+
+  return cookieToken || null;
+
+};
   /* =======================================================
      CLEAR ALERTS
   ======================================================= */
@@ -600,12 +611,28 @@ export default function CreateProductPage() {
          SERVER ERROR
       ================================================= */
 
-      if (!response.ok) {
-        throw new Error(
-          data?.message ||
-            "Impossible de créer le produit."
-        );
-      }
+     if (!response.ok) {
+  const message =
+    data?.message ||
+    "Impossible de créer le produit.";
+
+  // Cas : abonnement requis
+  if (
+    response.status === 403 ||
+    message.toLowerCase().includes("abonnement") ||
+    message.toLowerCase().includes("subscription")
+  ) {
+    setError(message);
+
+    setTimeout(() => {
+      router.push("/dashboard/subscriptions");
+    }, 2500);
+
+    return;
+  }
+
+  throw new Error(message);
+}
 
       /* =================================================
          SUCCESS
@@ -622,7 +649,7 @@ export default function CreateProductPage() {
 
       setTimeout(() => {
         router.push(
-          "/dashboard/product"
+          "/dashboard/products"
         );
 
         router.refresh();
@@ -654,7 +681,7 @@ export default function CreateProductPage() {
     }
 
     router.push(
-      "/dashboard/product"
+      "/dashboard/products"
     );
   };
 
