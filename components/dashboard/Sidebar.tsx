@@ -49,6 +49,19 @@ const menuItems = [
 
 
   // ===================================================
+  // PAIEMENTS
+  // ===================================================
+
+
+
+  
+  {
+    name: "Page de paiement",
+    href: "/dashboard/payment-config",
+    icon: CreditCard,
+  },
+
+  // ===================================================
   // PROMOTION
   // ===================================================
 
@@ -58,23 +71,6 @@ const menuItems = [
     icon: Megaphone,
   },
 
-
-  // ===================================================
-  // PAIEMENTS
-  // ===================================================
-
-  {
-    name: "Pages de paiement",
-    href: "/dashboard/payment-pages",
-    icon: WalletCards,
-  },
-
-
-  {
-    name: "Modes de paiement",
-    href: "/dashboard/payment-config",
-    icon: CreditCard,
-  },
 
 
   // ===================================================
@@ -105,7 +101,7 @@ const menuItems = [
 
   {
     name: "Mon entreprise",
-    href: "/p/jures",
+    href: "/store",
     icon: Building2,
   },
 

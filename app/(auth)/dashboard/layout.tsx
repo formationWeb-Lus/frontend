@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
+
 import Sidebar from "@/components/dashboard/Sidebar";
 import Header from "@/components/dashboard/Header";
-
 
 interface Props {
   children: ReactNode;
@@ -12,27 +12,19 @@ export default function DashboardLayout({
 }: Props) {
   return (
     <div className="min-h-screen bg-slate-100">
-
       {/* Sidebar */}
-
       <Sidebar />
 
-      {/* Contenu principal */}
-
-      <div className="lg:ml-72">
-
+      {/* Zone principale */}
+      <div className="flex min-h-screen flex-col lg:ml-72">
         {/* Header */}
-
         <Header />
 
-        {/* Contenu des pages */}
-
-        <main className="p-6 lg:p-8">
+        {/* Contenu */}
+        <main className="flex-1 w-full px-4 py-6 lg:px-6 xl:px-8">
           {children}
         </main>
-
       </div>
-
     </div>
   );
 }

@@ -276,12 +276,12 @@ return ( <main className="min-h-screen bg-slate-50"> <div className="mx-auto max
           {/* ACTION */}
           <div className="mt-10">
 
-            <button
-              type="button"
-              className="w-full rounded-2xl bg-[#08192D] px-6 py-4 text-base font-bold text-white transition hover:bg-[#102c4e]"
-            >
-              Acheter maintenant
-            </button>
+           <Link
+  href={`/pay/${slug}`}
+  className="flex w-full items-center justify-center rounded-2xl bg-[#08192D] px-6 py-4 text-base font-bold text-white transition hover:bg-[#102c4e]"
+>
+  Acheter maintenant
+</Link>
 
             <p className="mt-3 text-center text-xs text-slate-400">
               Paiement sécurisé et traitement rapide

@@ -21,7 +21,14 @@ interface Product {
   imageUrl: string | null;
   status: string;
   createdAt: string;
+
+  paymentPageProducts?: {
+    paymentPage: {
+      slug: string;
+    };
+  }[];
 }
+
 
 const API_URL =
   process.env.NEXT_PUBLIC_API_URL ||
@@ -297,20 +304,37 @@ export default function PublicProductsPage() {
                         {product.currency}
                       </span>
                     </div>
-
-                    {/* BUTTON */}
-
-                    <Link
-                      href={`/p/${product.id}`}
-                      className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-[#08192D] px-5 py-3.5 font-semibold text-white transition hover:bg-[#102c4e]"
-                    >
-                      Savoir plus
-
-                      <ArrowRight
-                        size={18}
-                      />
-                    </Link>
-
+<Link
+  href={
+    product.paymentPageProducts?.[0]
+      ? `/pay/${product.paymentPageProducts[0].paymentPage.slug}`
+      : "#"
+  }
+  className="
+    mt-6
+    flex
+    w-full
+    items-center
+    justify-center
+    gap-2
+    rounded-2xl
+    bg-[#08192D]
+    px-5
+    py-3
+    text-sm
+    font-semibold
+    text-white
+    transition-all
+    duration-300
+    hover:bg-[#102A4C]
+    hover:shadow-lg
+    hover:-translate-y-0.5
+    active:scale-95
+  "
+>
+  Voir tout
+  <ArrowRight size={18} />
+</Link>
                   </div>
 
                 </article>

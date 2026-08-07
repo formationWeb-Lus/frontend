@@ -18,6 +18,8 @@ import {
   RefreshCw,
 } from "lucide-react";
 
+
+
 /* =========================================================
    API URL
 ========================================================= */
@@ -858,7 +860,7 @@ const getToken = (): string | null => {
                           />
                         </div>
 
-                      )}
+                      )} 
 
                       {/* STATUS */}
 
@@ -1019,7 +1021,7 @@ const getToken = (): string | null => {
     className="mt-2 w-full inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-3 py-2.5 text-sm font-semibold text-white hover:bg-blue-700"
   >
     <Plus size={16} />
-    Créer une page de paiement
+    Definir ton mode de paiement
   </Link>
 ) : (
   <Link
@@ -1123,13 +1125,15 @@ const getToken = (): string | null => {
                         )}
 
                       </button>
-
+                    
                     </div>
 
                   </div>
                 );
               }
             )}
+
+             
 
           </div>
         )}

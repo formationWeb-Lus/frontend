@@ -19,6 +19,8 @@ import RevenueChart from "@/components/dashboard/RevenueChart";
 import PaymentMethodChart from "@/components/dashboard/PaymentMethodChart";
 import RecentTransactions from "@/components/dashboard/RecentTransactions";
 
+import DashboardFooter from "@/components/dashboard/DashboardFooter";
+
 
 // =====================================================
 // TYPES
@@ -498,7 +500,7 @@ if (
     function goToSubscription() {
 
         router.push(
-            "/dashboard/subscription"
+            "/dashboard/subscriptions"
         );
 
     }
@@ -509,7 +511,7 @@ if (
         if (!isActive) {
 
             router.push(
-                "/dashboard/subscription"
+                "/dashboard/subscriptions"
             );
 
             return;
@@ -529,7 +531,7 @@ if (
         if (!isActive) {
 
             router.push(
-                "/dashboard/subscription"
+                "/dashboard/subscriptions"
             );
 
             return;
@@ -550,7 +552,7 @@ if (
 
     return (
 
-        <div className="space-y-8">
+        <div className="w-full space-y-8">
 
 
             {/* ================================================= */}
@@ -1048,221 +1050,333 @@ if (
             {/* ACTIONS RAPIDES */}
             {/* ================================================= */}
 
-            <section>
+            {/* ================================================= */}
+{/* ACTIONS RAPIDES */}
+{/* ================================================= */}
 
-                <div className="
-                    mb-5
-                    flex
-                    items-center
-                    justify-between
-                ">
+<section>
 
-                    <h2 className="
-                        text-2xl
-                        font-bold
-                        text-[#08192D]
-                    ">
+  <div className="mb-6">
 
-                        Actions rapides
+    <h2
+      className="
+        text-2xl
+        font-extrabold
+        text-[#08192D]
+      "
+    >
+      Actions rapides
+    </h2>
 
-                    </h2>
+    <p
+      className="
+        mt-2
+        text-sm
+        text-slate-500
+      "
+    >
+      Accédez rapidement aux fonctionnalités principales de votre espace.
+    </p>
 
-                </div>
-
-
-                <div className="
-                    grid
-                    gap-5
-                    md:grid-cols-3
-                ">
-
-
-                    {/* ========================================= */}
-                    {/* PRODUIT */}
-                    {/* ========================================= */}
-
-                    <button
-                        onClick={
-                            goToProducts
-                        }
-                        className="
-                            rounded-2xl
-                            border
-                            border-slate-200
-                            bg-white
-                            p-6
-                            text-left
-                            transition
-                            hover:border-yellow-400
-                            hover:shadow-lg
-                        "
-                    >
-
-                        <Plus className="
-                            mb-4
-                            text-yellow-500
-                        " />
+  </div>
 
 
-                        <h3 className="
-                            font-bold
-                            text-[#08192D]
-                        ">
 
-                            Nouveau produit
-
-                        </h3>
-
-
-                        <p className="
-                            mt-2
-                            text-sm
-                            text-slate-500
-                        ">
-
-                            Créez un nouveau produit
-                            à vendre.
-
-                        </p>
-
-                    </button>
+  <div
+    className="
+      grid
+      gap-6
+      md:grid-cols-3
+    "
+  >
 
 
-                    {/* ========================================= */}
-                    {/* PAIEMENT */}
-                    {/* ========================================= */}
+    {/* PRODUITS */}
 
-                    <button
-                        onClick={
-                            goToPayment
-                        }
-                        className="
-                            rounded-2xl
-                            border
-                            border-slate-200
-                            bg-white
-                            p-6
-                            text-left
-                            transition
-                            hover:border-yellow-400
-                            hover:shadow-lg
-                        "
-                    >
+    <button
+      onClick={goToProducts}
+      className="
+        group
+        rounded-3xl
+        border
+        border-slate-200
+        bg-white
+        p-7
+        text-left
+        shadow-sm
+        transition
+        duration-300
+        hover:-translate-y-1
+        hover:border-yellow-400
+        hover:shadow-xl
+      "
+    >
 
-                        {isActive ? (
+      <div
+        className="
+          mb-5
+          flex
+          h-14
+          w-14
+          items-center
+          justify-center
+          rounded-2xl
+          bg-yellow-100
+          text-yellow-600
+          transition
+          group-hover:scale-110
+        "
+      >
 
-                            <Plus className="
-                                mb-4
-                                text-yellow-500
-                            " />
+        <Plus size={28}/>
 
-                        ) : (
-
-                            <Lock className="
-                                mb-4
-                                text-slate-400
-                            " />
-
-                        )}
-
-
-                        <h3 className="
-                            font-bold
-                            text-[#08192D]
-                        ">
-
-                            Nouvelle page
-                            de paiement
-
-                        </h3>
+      </div>
 
 
-                        <p className="
-                            mt-2
-                            text-sm
-                            text-slate-500
-                        ">
-
-                            {isActive
-
-                                ? "Générez un lien de paiement partageable."
-
-                                : "Abonnement requis pour cette fonctionnalité."
-                            }
-
-                        </p>
-
-                    </button>
+      <h3
+        className="
+          text-xl
+          font-bold
+          text-[#08192D]
+        "
+      >
+        Créer un produit
+      </h3>
 
 
-                    {/* ========================================= */}
-                    {/* CLIENT */}
-                    {/* ========================================= */}
-
-                    <button
-                        onClick={
-                            goToCustomers
-                        }
-                        className="
-                            rounded-2xl
-                            border
-                            border-slate-200
-                            bg-white
-                            p-6
-                            text-left
-                            transition
-                            hover:border-yellow-400
-                            hover:shadow-lg
-                        "
-                    >
-
-                        {isActive ? (
-
-                            <Plus className="
-                                mb-4
-                                text-yellow-500
-                            " />
-
-                        ) : (
-
-                            <Lock className="
-                                mb-4
-                                text-slate-400
-                            " />
-
-                        )}
+      <p
+        className="
+          mt-3
+          text-sm
+          leading-6
+          text-slate-500
+        "
+      >
+        Ajoutez un produit ou un service,
+        définissez votre prix et commencez
+        à vendre.
+      </p>
 
 
-                        <h3 className="
-                            font-bold
-                            text-[#08192D]
-                        ">
+      <div
+        className="
+          mt-6
+          text-sm
+          font-bold
+          text-yellow-600
+        "
+      >
+        Ajouter maintenant →
+      </div>
 
-                            Ajouter un client
 
-                        </h3>
+    </button>
 
 
-                        <p className="
-                            mt-2
-                            text-sm
-                            text-slate-500
-                        ">
 
-                            {isActive
 
-                                ? "Enregistrez un nouveau client."
+    {/* PAIEMENT */}
 
-                                : "Abonnement requis pour cette fonctionnalité."
-                            }
+    <button
+      onClick={goToPayment}
+      className="
+        group
+        rounded-3xl
+        border
+        border-slate-200
+        bg-white
+        p-7
+        text-left
+        shadow-sm
+        transition
+        duration-300
+        hover:-translate-y-1
+        hover:border-blue-400
+        hover:shadow-xl
+      "
+    >
 
-                        </p>
+      <div
+        className="
+          mb-5
+          flex
+          h-14
+          w-14
+          items-center
+          justify-center
+          rounded-2xl
+          bg-blue-100
+          text-blue-600
+          transition
+          group-hover:scale-110
+        "
+      >
 
-                    </button>
+        {isActive ? (
+          <CreditCard size={28}/>
+        ) : (
+          <Lock size={28}/>
+        )}
 
-                </div>
+      </div>
 
-            </section>
+
+
+      <h3
+        className="
+          text-xl
+          font-bold
+          text-[#08192D]
+        "
+      >
+        Créer un paiement
+      </h3>
+
+
+
+      <p
+        className="
+          mt-3
+          text-sm
+          leading-6
+          text-slate-500
+        "
+      >
+
+        Générez un lien de paiement
+        partageable avec vos clients.
+
+      </p>
+
+
+
+      <div
+        className="
+          mt-6
+          text-sm
+          font-bold
+          text-blue-600
+        "
+      >
+
+        {isActive
+          ? "Créer un lien →"
+          : "Activer l'abonnement →"
+        }
+
+      </div>
+
+
+    </button>
+
+
+
+
+
+    {/* CLIENTS */}
+
+    <button
+      onClick={goToCustomers}
+      className="
+        group
+        rounded-3xl
+        border
+        border-slate-200
+        bg-white
+        p-7
+        text-left
+        shadow-sm
+        transition
+        duration-300
+        hover:-translate-y-1
+        hover:border-green-400
+        hover:shadow-xl
+      "
+    >
+
+
+      <div
+        className="
+          mb-5
+          flex
+          h-14
+          w-14
+          items-center
+          justify-center
+          rounded-2xl
+          bg-green-100
+          text-green-600
+          transition
+          group-hover:scale-110
+        "
+      >
+
+        {isActive ? (
+          <Users size={28}/>
+        ) : (
+          <Lock size={28}/>
+        )}
+
+      </div>
+
+
+
+
+      <h3
+        className="
+          text-xl
+          font-bold
+          text-[#08192D]
+        "
+      >
+
+        Gérer les clients
+
+      </h3>
+
+
+
+
+      <p
+        className="
+          mt-3
+          text-sm
+          leading-6
+          text-slate-500
+        "
+      >
+
+        Ajoutez vos clients et suivez
+        facilement vos transactions.
+
+      </p>
+
+
+
+
+      <div
+        className="
+          mt-6
+          text-sm
+          font-bold
+          text-green-600
+        "
+      >
+
+        {isActive
+          ? "Voir les clients →"
+          : "Abonnement requis →"
+        }
+
+      </div>
+
+
+    </button>
+
+
+  </div>
+
+</section>
 
 
             {/* ================================================= */}
@@ -1278,6 +1392,7 @@ if (
                 </section>
 
             )}
+            <DashboardFooter />
 
         </div>
 
