@@ -209,8 +209,11 @@ export default function CreateProductPage() {
   const [currency, setCurrency] =
     useState<Currency>("USD");
 
-  const [imageUrl, setImageUrl] =
-    useState("");
+ const [imageFile, setImageFile] =
+useState<File | null>(null);
+
+const [imagePreview, setImagePreview] =
+useState("");
 
   const [status, setStatus] =
     useState<ProductStatus>("DRAFT");
@@ -260,116 +263,92 @@ const getToken = (): string | null => {
   /* =======================================================
      GENERATE TECHNICAL NAME
   ======================================================= */
+const generateFieldName = (value: string) => {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+/, "")
+    .replace(/_+$/, "");
+};
 
-  const generateFieldName = (
-    value: string
-  ) => {
-    return value
-      .normalize("NFD")
-      .replace(
-        /[\u0300-\u036f]/g,
-        ""
-      )
-      .toLowerCase()
-      .trim()
-      .replace(
-        /[^a-z0-9]+/g,
-        "_"
-      )
-      .replace(
-        /^_+/,
-        ""
-      )
-      .replace(
-        /_+$/,
-        ""
-      );
-  };
+/* =======================================================
+ADD FIELD
+======================================================= */
 
-  /* =======================================================
-     ADD FIELD
-  ======================================================= */
+const addField = () => {
+  setFields((previous) => [
+    ...previous,
+    {
+      name: "",
+      label: "",
+      type: "TEXT",
+      value: "",
+      required: false,
+    },
+  ]);
+};
 
-  const addField = () => {
-    setFields((previous) => [
-      ...previous,
-      {
-        name: "",
-        label: "",
-        type: "TEXT",
-        value: "",
-        required: false,
-      },
-    ]);
-  };
+/* =======================================================
+UPDATE FIELD
+======================================================= */
 
-  /* =======================================================
-     UPDATE FIELD
-  ======================================================= */
-
-  const updateField = (
-    index: number,
-    key: keyof ProductField,
-    value: string | boolean
-  ) => {
-    setFields((previous) =>
-      previous.map(
-        (field, fieldIndex) =>
-          fieldIndex === index
-            ? {
-                ...field,
-                [key]: value,
-              }
-            : field
-      )
-    );
-  };
-
-  /* =======================================================
-     LABEL CHANGE
-  ======================================================= */
-
-  const handleFieldLabelChange = (
-    index: number,
-    value: string
-  ) => {
-    setFields((previous) =>
-      previous.map(
-        (field, fieldIndex) => {
-          if (
-            fieldIndex !== index
-          ) {
-            return field;
-          }
-
-          return {
+const updateField = (
+  index: number,
+  key: keyof ProductField,
+  value: string | boolean
+) => {
+  setFields((previous) =>
+    previous.map((field, fieldIndex) =>
+      fieldIndex === index
+        ? {
             ...field,
-            label: value,
-            name:
-              field.name ||
-              generateFieldName(
-                value
-              ),
-          };
-        }
-      )
-    );
-  };
+            [key]: value,
+          }
+        : field
+    )
+  );
+};
 
-  /* =======================================================
-     REMOVE FIELD
-  ======================================================= */
+/* =======================================================
+LABEL CHANGE
+======================================================= */
 
-  const removeField = (
-    index: number
-  ) => {
-    setFields((previous) =>
-      previous.filter(
-        (_, fieldIndex) =>
-          fieldIndex !== index
-      )
-    );
-  };
+const handleFieldLabelChange = (
+  index: number,
+  value: string
+) => {
+  setFields((previous) =>
+    previous.map((field, fieldIndex) => {
+      if (fieldIndex !== index) {
+        return field;
+      }
+
+      return {
+        ...field,
+        label: value,
+        name:
+          field.name ||
+          generateFieldName(value),
+      };
+    })
+  );
+};
+
+/* =======================================================
+REMOVE FIELD
+======================================================= */
+
+const removeField = (index: number) => {
+  setFields((previous) =>
+    previous.filter(
+      (_, fieldIndex) => fieldIndex !== index
+    )
+  );
+};
+
 
   /* =======================================================
      VALIDATION
@@ -451,121 +430,161 @@ const getToken = (): string | null => {
   /* =======================================================
      CREATE PRODUCT
   ======================================================= */
+const handleSubmit = async (
+  event: FormEvent
+) => {
 
-  const handleSubmit = async (
-    event: FormEvent<HTMLFormElement>
-  ) => {
-    event.preventDefault();
+event.preventDefault();
 
-    clearAlerts();
+clearAlerts();
 
-    const token =
-      getToken();
 
-    if (!token) {
-      setError(
-        "Utilisateur non authentifié. Veuillez vous reconnecter."
-      );
+const token =
+  getToken();
 
-      return;
+
+if (!token) {
+
+  setError(
+    "Utilisateur non authentifié. Veuillez vous reconnecter."
+  );
+
+  return;
+
+}
+
+
+const validationError =
+  validateForm();
+
+
+if (validationError) {
+
+  setError(
+    validationError
+  );
+
+  return;
+
+}
+
+
+
+try {
+
+  setLoading(true);
+
+
+
+const formData = new FormData();
+
+formData.append(
+  "name",
+  name.trim()
+);
+
+formData.append(
+  "subtitle",
+  subtitle.trim()
+    ? subtitle.trim()
+    : ""
+);
+
+formData.append(
+  "description",
+  description.trim()
+    ? description.trim()
+    : ""
+);
+
+formData.append(
+  "type",
+  type
+);
+
+formData.append(
+  "price",
+  String(Number(price))
+);
+
+formData.append(
+  "currency",
+  currency
+);
+
+formData.append(
+  "status",
+  status
+);
+
+formData.append(
+  "fields",
+  JSON.stringify(
+    fields.map(
+      (field) => ({
+        name:
+          field.name.trim(),
+
+        label:
+          field.label.trim(),
+
+        type:
+          field.type,
+
+        value:
+          field.value.trim()
+            ? field.value.trim()
+            : null,
+
+        required:
+          field.required,
+      })
+    )
+  )
+);
+
+if (imageFile) {
+  formData.append(
+    "image",
+    imageFile
+  );
+}
+
+console.log(
+  "CREATE PRODUCT FORMDATA:",
+  {
+    name,
+    subtitle,
+    description,
+    type,
+    price,
+    currency,
+    status,
+    imageFile,
+    fields,
+  }
+);
+
+const response =
+  await fetch(
+    `${API_URL}/product`,
+    {
+      method: "POST",
+
+      headers: {
+        Authorization:
+          `Bearer ${token}`,
+      },
+
+      body: formData,
     }
+  );
 
-    const validationError =
-      validateForm();
-
-    if (validationError) {
-      setError(
-        validationError
-      );
-
-      return;
-    }
-
-    try {
-      setLoading(true);
-
-      /* =================================================
-         PAYLOAD EXACTEMENT COMPATIBLE AVEC LE CONTROLLER
-      ================================================= */
-
-      const payload = {
-        name: name.trim(),
-
-        subtitle:
-          subtitle.trim()
-            ? subtitle.trim()
-            : null,
-
-        description:
-          description.trim()
-            ? description.trim()
-            : null,
-
-        type,
-
-        price: Number(price),
-
-        currency,
-
-        imageUrl:
-          imageUrl.trim()
-            ? imageUrl.trim()
-            : null,
-
-        status,
-
-        fields:
-          fields.map(
-            (field) => ({
-              name:
-                field.name.trim(),
-
-              label:
-                field.label.trim(),
-
-              type:
-                field.type,
-
-              value:
-                field.value.trim()
-                  ? field.value.trim()
-                  : null,
-
-              required:
-                field.required,
-            })
-          ),
-      };
-
-      console.log(
-        "CREATE PRODUCT PAYLOAD:",
-        payload
-      );
+     
 
       /* =================================================
          REQUEST
       ================================================= */
-
-      const response =
-        await fetch(
-          `${API_URL}/product`,
-          {
-            method: "POST",
-
-            headers: {
-              "Content-Type":
-                "application/json",
-
-              Authorization:
-                `Bearer ${token}`,
-            },
-
-            body:
-              JSON.stringify(
-                payload
-              ),
-          }
-        );
 
       /* =================================================
          RESPONSE
@@ -1213,49 +1232,45 @@ const getToken = (): string | null => {
 
                 <div className="p-6">
 
-                  <label className="mb-2 block text-sm font-semibold text-slate-700">
-                    URL de l'image
-                  </label>
+                 <label className="mb-2 block text-sm font-semibold text-slate-700">
+  Image du produit
+</label>
 
-                  <input
-                    type="url"
-                    value={
-                      imageUrl
-                    }
-                    onChange={(
-                      event
-                    ) =>
-                      setImageUrl(
-                        event.target
-                          .value
-                      )
-                    }
-                    placeholder="https://example.com/image.jpg"
-                    className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
-                  />
+<input
+  type="file"
+  accept="image/*"
+  onChange={(event) => {
+    const file =
+      event.target.files?.[0];
 
-                  {imageUrl && (
-                    <div className="mt-5 overflow-hidden rounded-2xl border border-slate-200 bg-slate-100">
+    if (!file) return;
 
-                      <img
-                        src={
-                          imageUrl
-                        }
-                        alt={
-                          name ||
-                          "Produit"
-                        }
-                        className="max-h-[400px] w-full object-cover"
-                        onError={(
-                          event
-                        ) => {
-                          event.currentTarget.style.display =
-                            "none";
-                        }}
-                      />
+    setImageFile(file);
 
-                    </div>
-                  )}
+    setImagePreview(
+      URL.createObjectURL(file)
+    );
+  }}
+  className="w-full rounded-xl border border-slate-200 px-4 py-3"
+/>
+
+                 {imagePreview && (
+  <div className="mt-5 overflow-hidden rounded-2xl border border-slate-200 bg-slate-100">
+
+    <img
+      src={imagePreview}
+      alt={
+        name ||
+        "Produit"
+      }
+      className="max-h-[400px] w-full object-cover"
+      onError={(event) => {
+        event.currentTarget.style.display = "none";
+      }}
+    />
+
+  </div>
+)}
 
                 </div>
 
@@ -1772,18 +1787,16 @@ const getToken = (): string | null => {
 
                   <div className="aspect-video bg-slate-100">
 
-                    {imageUrl ? (
-                      <img
-                        src={
-                          imageUrl
-                        }
-                        alt={
-                          name ||
-                          "Produit"
-                        }
-                        className="h-full w-full object-cover"
-                      />
-                    ) : (
+                   {imagePreview ? (
+  <img
+    src={imagePreview}
+    alt={
+      name ||
+      "Produit"
+    }
+    className="h-full w-full object-cover"
+  />
+) : (
                       <div className="flex h-full flex-col items-center justify-center text-slate-400">
 
                         <ImageIcon
@@ -1865,5 +1878,5 @@ const getToken = (): string | null => {
 
     </div>
   );
-}
+};
 
