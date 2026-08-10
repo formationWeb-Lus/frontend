@@ -55,7 +55,7 @@ export default function LoginForm() {
 
       const API_URL =
         process.env.NEXT_PUBLIC_API_URL ||
-        "http://paylink.coderise-solution.com/api";
+        "https://paylink.coderise-solution.com/api";
 
       const loginUrl = `${API_URL.replace(/\/+$/, "")}/auth/login`;
 
