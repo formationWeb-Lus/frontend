@@ -76,7 +76,11 @@ interface Channel {
 // API
 // =====================================================
 
-const API_BASE =
+// =====================================================
+// API
+// =====================================================
+
+const API_URL =
   process.env.NEXT_PUBLIC_API_URL ||
   "http://paylink.coderise-solution.com/api";
 

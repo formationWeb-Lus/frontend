@@ -125,6 +125,21 @@ export default function StorePage() {
    * ====================================================
    */
 
+  
+// =====================================================
+// API / SITE URL
+// =====================================================
+
+const API_URL =
+  process.env.NEXT_PUBLIC_API_URL ||
+  "http://paylink.coderise-solution.com/api";
+
+const SITE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL ||
+  "http://paylink.coderise-solution.com";
+
+
+
   useEffect(() => {
     async function loadProducts() {
       try {

@@ -89,18 +89,15 @@ interface Channel {
 // API
 // =====================================================
 
-const API_BASE =
+
+const API_URL =
   process.env.NEXT_PUBLIC_API_URL ||
   "http://paylink.coderise-solution.com/api";
+
 
 // =====================================================
 // SITE URL
 // =====================================================
-
-const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL ||
-  "http://localhost:3000";
-
 // =====================================================
 // FACEBOOK ICON
 // =====================================================
@@ -623,6 +620,25 @@ export default function MarketingChannelsPage() {
   // ===================================================
   // SHARE TEXT
   // ===================================================
+
+  
+// =====================================================
+// API URL
+// =====================================================
+
+const API_URL =
+  process.env.NEXT_PUBLIC_API_URL ||
+  "http://paylink.coderise-solution.com/api";
+
+// =====================================================
+// SITE URL
+// =====================================================
+
+const SITE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL ||
+  "http://paylink.coderise-solution.com";
+
+
 
   function getShareText(
     product: Product
