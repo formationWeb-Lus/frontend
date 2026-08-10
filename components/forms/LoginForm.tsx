@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -15,211 +16,237 @@ import {
   Lock,
 } from "lucide-react";
 
-
-
 const loginSchema = z.object({
-
-  email: z
-    .string()
-    .email("Adresse email invalide"),
-
-
-  password: z
-    .string()
-    .min(8, "Minimum 8 caractères"),
-
+  email: z.string().email("Adresse email invalide"),
+  password: z.string().min(8, "Minimum 8 caractères"),
 });
 
-
-
-type LoginFormData =
-  z.infer<typeof loginSchema>;
-
-
-
-
+type LoginFormData = z.infer<typeof loginSchema>;
 
 export default function LoginForm() {
-
-
   const router = useRouter();
 
+  const [showPassword, setShowPassword] = useState(false);
 
-  const [showPassword, setShowPassword] =
-    useState(false);
-
-
-
-  const [message, setMessage] =
-    useState("");
-
-
-
-  const [messageType, setMessageType] =
-    useState<
-      "success" | "error" | ""
-    >("");
-
-
-
+  const [message, setMessage] = useState("");
+  const [messageType, setMessageType] = useState<
+    "success" | "error" | ""
+  >("");
 
   const {
-
     register,
-
     handleSubmit,
-
     formState: {
       errors,
       isSubmitting,
     },
-
   } = useForm<LoginFormData>({
-
-    resolver:
-      zodResolver(loginSchema),
-
+    resolver: zodResolver(loginSchema),
   });
 
+  async function onSubmit(data: LoginFormData) {
+    try {
+      setMessage("");
+      setMessageType("");
 
+      // =====================================================
+      // API URL
+      // =====================================================
 
+      const API_URL =
+        process.env.NEXT_PUBLIC_API_URL ||
+        "http://paylink.coderise-solution.com/api";
 
+      const loginUrl = `${API_URL.replace(/\/+$/, "")}/auth/login`;
 
+      console.log("====================================");
+      console.log("LOGIN");
+      console.log("API_URL :", API_URL);
+      console.log("LOGIN URL :", loginUrl);
+      console.log("EMAIL :", data.email);
+      console.log("====================================");
 
-async function onSubmit(data: LoginFormData) {
-  try {
-    setMessage("");
-    setMessageType("");
+      // =====================================================
+      // REQUÊTE LOGIN
+      // =====================================================
 
-   const API_URL =
-  process.env.NEXT_PUBLIC_API_URL ||
-  "http://paylink.coderise-solution.com/api";
+      const response = await fetch(loginUrl, {
+        method: "POST",
 
-  console.log(
-  "🔥 API_URL =",
-  API_URL
-);
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
 
-console.log(
-  "🔥 LOGIN URL =",
-  `${API_URL}/auth/login`
-);
+        body: JSON.stringify({
+          email: data.email.trim(),
+          password: data.password,
+        }),
+      });
 
-const response = await fetch(
-  `${API_URL}/auth/login`,
-  {
-    method: "POST",
+      // =====================================================
+      // LECTURE DE LA RÉPONSE
+      // =====================================================
 
-    headers: {
-      "Content-Type": "application/json",
-    },
+      let result: any = {};
 
-    body: JSON.stringify({
-      email: data.email,
-      password: data.password,
-    }),
-  }
-);
+      const contentType =
+        response.headers.get("content-type") || "";
 
-    const result = await response.json();
+      if (contentType.includes("application/json")) {
+        result = await response.json();
+      } else {
+        const text = await response.text();
 
-    if (!response.ok) {
-      setMessage(
-        result.message ||
-          "Email ou mot de passe incorrect."
-      );
+        console.error(
+          "Réponse serveur non JSON :",
+          text
+        );
 
-      setMessageType("error");
-      return;
-    }
-
-    if (!result.success || !result.token) {
-      setMessage(
-        result.message ||
-          "Connexion impossible."
-      );
-
-      setMessageType("error");
-      return;
-    }
-
-    // =====================================
-    // Sauvegarde du token
-    // =====================================
-
-    localStorage.setItem(
-      "token",
-      result.token
-    );
-
-    // =====================================
-    // Sauvegarde de l'utilisateur
-    // =====================================
-
-    if (result.user) {
-      localStorage.setItem(
-        "user",
-        JSON.stringify(result.user)
-      );
-    }
-
-    // =====================================
-    // Cookie
-    // =====================================
-
-    document.cookie = `token=${result.token}; path=/; max-age=604800; SameSite=Lax`;
-
-    console.log(
-      "TOKEN ENREGISTRÉ :",
-      localStorage.getItem("token")
-    );
-
-    setMessage("Connexion réussie.");
-
-    setMessageType("success");
-
-    setTimeout(() => {
-      router.push("/dashboard");
-    }, 800);
-  } catch (error) {
-    console.error("LOGIN ERROR :", error);
-
-    setMessage(
-      "Impossible de contacter le serveur."
-    );
-
-    setMessageType("error");
-  }
-}
-
-
-
-
-
-  return (
-
-
-    <form
-
-      onSubmit={
-        handleSubmit(onSubmit)
+        result = {
+          message:
+            text ||
+            "Réponse invalide du serveur.",
+        };
       }
 
-      className="
-        space-y-5
-      "
+      console.log(
+        "HTTP STATUS :",
+        response.status
+      );
 
+      console.log(
+        "LOGIN RESPONSE :",
+        result
+      );
+
+      // =====================================================
+      // ERREUR HTTP
+      // =====================================================
+
+      if (!response.ok) {
+        setMessage(
+          result?.message ||
+            result?.error ||
+            result?.data?.message ||
+            `Erreur serveur (${response.status}).`
+        );
+
+        setMessageType("error");
+
+        return;
+      }
+
+      // =====================================================
+      // VALIDATION DE LA RÉPONSE
+      // =====================================================
+
+      if (!result?.success) {
+        setMessage(
+          result?.message ||
+            "Connexion impossible."
+        );
+
+        setMessageType("error");
+
+        return;
+      }
+
+      if (!result?.token) {
+        console.error(
+          "Token absent de la réponse :",
+          result
+        );
+
+        setMessage(
+          "Le serveur n'a pas retourné de token."
+        );
+
+        setMessageType("error");
+
+        return;
+      }
+
+      // =====================================================
+      // SAUVEGARDE DU TOKEN
+      // =====================================================
+
+      localStorage.setItem(
+        "token",
+        result.token
+      );
+
+      // =====================================================
+      // SAUVEGARDE DE L'UTILISATEUR
+      // =====================================================
+
+      if (result.user) {
+        localStorage.setItem(
+          "user",
+          JSON.stringify(result.user)
+        );
+      }
+
+      // =====================================================
+      // COOKIE
+      // =====================================================
+
+      document.cookie =
+        `token=${encodeURIComponent(result.token)}; ` +
+        `path=/; ` +
+        `max-age=604800; ` +
+        `SameSite=Lax`;
+
+      console.log(
+        "TOKEN ENREGISTRÉ :",
+        localStorage.getItem("token")
+      );
+
+      // =====================================================
+      // SUCCÈS
+      // =====================================================
+
+      setMessage("Connexion réussie.");
+      setMessageType("success");
+
+      setTimeout(() => {
+        router.push("/dashboard");
+      }, 800);
+
+    } catch (error) {
+      console.error(
+        "===================================="
+      );
+
+      console.error(
+        "LOGIN ERROR :",
+        error
+      );
+
+      console.error(
+        "===================================="
+      );
+
+      setMessage(
+        "Impossible de contacter le serveur. Vérifiez la connexion à l'API."
+      );
+
+      setMessageType("error");
+    }
+  }
+
+  return (
+    <form
+      onSubmit={handleSubmit(onSubmit)}
+      className="space-y-5"
     >
 
-
-
-      {/* MESSAGE FLASH */}
-
+      {/* =====================================================
+          MESSAGE
+      ===================================================== */}
 
       {message && (
-
         <div
-
           className={`
             rounded-xl
             p-3
@@ -228,57 +255,37 @@ const response = await fetch(
 
             ${
               messageType === "success"
-              ? "bg-green-100 text-green-700"
-              : "bg-red-100 text-red-700"
+                ? "bg-green-100 text-green-700"
+                : "bg-red-100 text-red-700"
             }
-
           `}
-
         >
-
           {message}
-
-
         </div>
-
-
       )}
 
-
-
-
-
-
-      {/* EMAIL */}
-
+      {/* =====================================================
+          EMAIL
+      ===================================================== */}
 
       <div>
 
-
-        <label className="
-          mb-2
-          block
-          text-sm
-          font-semibold
-          text-slate-700
-        ">
-
-
+        <label
+          className="
+            mb-2
+            block
+            text-sm
+            font-semibold
+            text-slate-700
+          "
+        >
           Adresse email
-
-
         </label>
-
-
-
 
         <div className="relative">
 
-
           <Mail
-
             size={19}
-
             className="
               absolute
               left-4
@@ -286,25 +293,13 @@ const response = await fetch(
               -translate-y-1/2
               text-slate-400
             "
-
           />
 
-
-
-
           <input
-
-
             type="email"
-
-
             {...register("email")}
-
-
             placeholder="nom@email.com"
-
-
-
+            autoComplete="email"
             className="
               w-full
               rounded-xl
@@ -322,76 +317,46 @@ const response = await fetch(
               focus:ring-4
               focus:ring-yellow-100
             "
-
-
           />
-
-
 
         </div>
 
-
-
-
-
-        {
-          errors.email && (
-
-            <p className="
+        {errors.email && (
+          <p
+            className="
               mt-1
               text-sm
               text-red-500
-            ">
-
-
-              {errors.email.message}
-
-
-            </p>
-
-
-          )
-        }
-
-
+            "
+          >
+            {errors.email.message}
+          </p>
+        )}
 
       </div>
 
-
-
-
-
-
-      {/* PASSWORD */}
-
+      {/* =====================================================
+          PASSWORD
+      ===================================================== */}
 
       <div>
 
-
-        <label className="
-          mb-2
-          block
-          text-sm
-          font-semibold
-          text-slate-700
-        ">
-
-
+        <label
+          className="
+            mb-2
+            block
+            text-sm
+            font-semibold
+            text-slate-700
+          "
+        >
           Mot de passe
-
-
         </label>
-
-
-
 
         <div className="relative">
 
-
           <Lock
-
             size={19}
-
             className="
               absolute
               left-4
@@ -399,28 +364,17 @@ const response = await fetch(
               -translate-y-1/2
               text-slate-400
             "
-
           />
 
-
-                    <input
-
+          <input
             type={
               showPassword
-              ? "text"
-              : "password"
+                ? "text"
+                : "password"
             }
-
-
             {...register("password")}
-
-
-
             placeholder="********"
-
-
-
-
+            autoComplete="current-password"
             className="
               w-full
               rounded-xl
@@ -438,30 +392,15 @@ const response = await fetch(
               focus:ring-4
               focus:ring-yellow-100
             "
-
-
-
           />
 
-
-
-
-
-
           <button
-
-
             type="button"
-
-
             onClick={() =>
               setShowPassword(
                 !showPassword
               )
             }
-
-
-
             className="
               absolute
               right-4
@@ -469,118 +408,62 @@ const response = await fetch(
               -translate-y-1/2
               text-slate-500
             "
-
-
-          >
-
-
-
-            {
+            aria-label={
               showPassword
-
-              ?
-
-              <EyeOff size={19}/>
-
-              :
-
-              <Eye size={19}/>
-
+                ? "Masquer le mot de passe"
+                : "Afficher le mot de passe"
             }
-
-
-
+          >
+            {showPassword ? (
+              <EyeOff size={19} />
+            ) : (
+              <Eye size={19} />
+            )}
           </button>
-
-
 
         </div>
 
-
-
-
-
-        {
-          errors.password && (
-
-            <p className="
+        {errors.password && (
+          <p
+            className="
               mt-1
               text-sm
               text-red-500
-            ">
-
-
-              {errors.password.message}
-
-
-            </p>
-
-
-          )
-        }
-
-
+            "
+          >
+            {errors.password.message}
+          </p>
+        )}
 
       </div>
 
+      {/* =====================================================
+          MOT DE PASSE OUBLIÉ
+      ===================================================== */}
 
-
-
-
-
-
-      {/* MOT DE PASSE OUBLIE */}
-
-
-      <div className="
-        flex
-        justify-end
-      ">
-
-
+      <div className="flex justify-end">
 
         <Link
-
           href="/forgot-password"
-
           className="
             text-sm
             font-semibold
             text-yellow-600
             hover:text-yellow-500
           "
-
         >
-
           Mot de passe oublié ?
-
         </Link>
-
-
 
       </div>
 
-
-
-
-
-
-
-
-      {/* BOUTON CONNEXION */}
-
-
+      {/* =====================================================
+          BOUTON
+      ===================================================== */}
 
       <button
-
-
         type="submit"
-
-
         disabled={isSubmitting}
-
-
-
         className="
           flex
           w-full
@@ -593,56 +476,25 @@ const response = await fetch(
           text-white
           transition
           hover:bg-[#102c4e]
+          disabled:cursor-not-allowed
           disabled:opacity-70
         "
-
-
-
       >
 
-
-
-
-        {
-
-          isSubmitting
-
-
-          ?
-
-
+        {isSubmitting ? (
           <Loader2
-
             className="
               h-5
               w-5
               animate-spin
             "
-
           />
-
-
-          :
-
-
+        ) : (
           "Se connecter"
-
-
-
-        }
-
-
+        )}
 
       </button>
 
-
-
-
-
     </form>
-
-
   );
-
-
 }
