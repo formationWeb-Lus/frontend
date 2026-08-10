@@ -177,20 +177,18 @@ export default function SubscriptionDetailsPage() {
                 // API
                 // -----------------------------------------
 
-                const response =
-                    await fetch(
-                        `http://localhost:5000/api/plans/${planId}`,
-                        {
-                            method: "GET",
+               const response = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/plans/${planId}`,
+    {
+        method: "GET",
 
-                            headers: {
-                                Authorization:
-                                    `Bearer ${token}`,
-                            },
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
 
-                            cache: "no-store",
-                        }
-                    );
+        cache: "no-store",
+    }
+);
 
 
                 const result =

@@ -130,19 +130,17 @@ if (!token) {
                 // -----------------------------------------
 
                 const response = await fetch(
-                    "http://localhost:5000/api/auth/me",
-                    {
-                        method: "GET",
+  `${process.env.NEXT_PUBLIC_API_URL}/auth/me`,
+  {
+    method: "GET",
 
-                        headers: {
-                            Authorization:
-                                `Bearer ${token}`,
-                        },
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
 
-                        cache: "no-store",
-                    }
-                );
-
+    cache: "no-store",
+  }
+);
 
                 const result =
                     await response.json();

@@ -91,23 +91,35 @@ async function onSubmit(data: LoginFormData) {
     setMessage("");
     setMessageType("");
 
-    const API_URL =
-      process.env.NEXT_PUBLIC_API_URL ||
-      "http://localhost:5000/api";
+   const API_URL =
+  process.env.NEXT_PUBLIC_API_URL ||
+  "http://paylink.coderise-solution.com/api";
 
-    const response = await fetch(
-      `${API_URL}/auth/login`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: data.email,
-          password: data.password,
-        }),
-      }
-    );
+  console.log(
+  "🔥 API_URL =",
+  API_URL
+);
+
+console.log(
+  "🔥 LOGIN URL =",
+  `${API_URL}/auth/login`
+);
+
+const response = await fetch(
+  `${API_URL}/auth/login`,
+  {
+    method: "POST",
+
+    headers: {
+      "Content-Type": "application/json",
+    },
+
+    body: JSON.stringify({
+      email: data.email,
+      password: data.password,
+    }),
+  }
+);
 
     const result = await response.json();
 

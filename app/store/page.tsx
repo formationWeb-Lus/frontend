@@ -53,9 +53,10 @@ interface Product {
  * ======================================================
  */
 
-const API_URL =
+const API_BASE =
   process.env.NEXT_PUBLIC_API_URL ||
-  "http://localhost:5000/api";
+  "http://paylink.coderise-solution.com/api";
+
 
 /**
  * ======================================================

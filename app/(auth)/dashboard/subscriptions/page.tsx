@@ -42,7 +42,7 @@ interface Subscription {
 // CONFIGURATION
 // =====================================================
 
-const API_URL = "http://localhost:5000";
+const API_URL = "http://paylink.coderise-solution.com/api";
 
 
 // =====================================================

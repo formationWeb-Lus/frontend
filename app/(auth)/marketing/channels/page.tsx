@@ -89,9 +89,9 @@ interface Channel {
 // API
 // =====================================================
 
-const API_URL =
+const API_BASE =
   process.env.NEXT_PUBLIC_API_URL ||
-  "http://localhost:5000";
+  "http://paylink.coderise-solution.com/api";
 
 // =====================================================
 // SITE URL

@@ -70,16 +70,15 @@ export default function TransactionsPage() {
           localStorage.getItem("token");
 
 
-        const response =
-          await fetch(
-            "http://localhost:5000/api/payment/transactions",
-            {
-              headers:{
-                Authorization:
-                  `Bearer ${token}`
-              }
-            }
-          );
+       const response = await fetch(
+  `${process.env.NEXT_PUBLIC_API_URL}/payment/transactions`,
+  {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    cache: "no-store",
+  }
+);
 
 
         const data =

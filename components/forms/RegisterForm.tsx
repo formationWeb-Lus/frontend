@@ -169,19 +169,17 @@ export default function RegisterForm() {
     try {
 
 
-      const response =
-        await fetch(
-          "http://localhost:5000/api/auth/register",
-          {
+      const response = await fetch(
+  `${process.env.NEXT_PUBLIC_API_URL}/auth/register`,
+  {
+    method: "POST",
 
-            method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
 
-            headers: {
-
-              "Content-Type":
-                "application/json",
-
-            },
+    // ton body reste ici
+  
 
 
             body: JSON.stringify({

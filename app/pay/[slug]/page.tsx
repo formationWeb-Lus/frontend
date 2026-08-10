@@ -22,30 +22,47 @@ import {
   ShieldCheck,
 } from "lucide-react";
 
-// =====================================================
-// CONFIG API
-// =====================================================
+/* =========================================================
+   CONFIGURATION API
+========================================================= */
 
 const API_URL =
   process.env.NEXT_PUBLIC_API_URL ||
-  "http://localhost:5000/api";
+  "https://paylink.coderise-solution.com/api";
 
-// =====================================================
-// TAUX DE CONVERSION
-// =====================================================
-//
-// 1 USD = 2 230 CDF
-//
-// Ce taux est volontairement fixe pour ShopFlowPay.
-// =====================================================
+/*
+IMPORTANT
+
+NEXT_PUBLIC_API_URL doit être :
+
+https://paylink.coderise-solution.com/api
+
+Les endpoints utilisés sont :
+
+GET
+https://paylink.coderise-solution.com/api/public/payment-pages/:slug
+
+POST
+https://paylink.coderise-solution.com/api/payment/initiate
+*/
+
+/* =========================================================
+   TAUX USD / CDF
+========================================================= */
 
 const USD_TO_CDF_RATE = 2230;
 
-// =====================================================
-// TYPES
-// =====================================================
+/* =========================================================
+   TYPES
+========================================================= */
 
 type PaymentCurrency = "USD" | "CDF";
+
+type Telecom =
+  | "AM"
+  | "OM"
+  | "MP"
+  | "AF";
 
 type ProductFieldType =
   | "TEXT"
@@ -58,6 +75,10 @@ type ProductFieldType =
   | "IMAGE"
   | "FILE"
   | "BOOLEAN";
+
+/* =========================================================
+   PRODUCT FIELD
+========================================================= */
 
 interface ProductField {
   id: number;
@@ -72,6 +93,10 @@ interface ProductField {
 
   required: boolean;
 }
+
+/* =========================================================
+   PRODUCT
+========================================================= */
 
 interface Product {
   id: number;
@@ -99,6 +124,10 @@ interface Product {
   fields?: ProductField[];
 }
 
+/* =========================================================
+   PAYMENT PAGE
+========================================================= */
+
 interface PaymentPage {
   id: number;
 
@@ -113,10 +142,9 @@ interface PaymentPage {
   createdAt?: string;
 }
 
-// =====================================================
-// RÉPONSE RÉELLE DE L'API
-// GET /public/payment-pages/:slug
-// =====================================================
+/* =========================================================
+   PUBLIC PAYMENT API RESPONSE
+========================================================= */
 
 interface PublicPaymentApiResponse {
   success: boolean;
@@ -130,52 +158,47 @@ interface PublicPaymentApiResponse {
   message?: string;
 }
 
-// =====================================================
-// FORMAT UTILISÉ DANS LE COMPOSANT
-// =====================================================
+/* =========================================================
+   PAYMENT API RESPONSE
+========================================================= */
 
-interface PublicPaymentResponse {
-  success: boolean;
-
-  paymentPage: PaymentPage;
-
-  product: Product;
-
-  instructor: null;
-
-  company: null;
+interface PaymentApiResponse {
+  success?: boolean;
 
   message?: string;
+
+  transactionId?: string;
+
+  status?: string;
+
+  data?: {
+    transactionId?: string;
+
+    status?: string;
+
+    message?: string;
+  };
 }
 
-// =====================================================
-// TELECOM
-// =====================================================
-
-type Telecom =
-  | "AM"
-  | "OM"
-  | "MP"
-  | "AF";
-
-// =====================================================
-// HELPERS
-// =====================================================
+/* =========================================================
+   FORMAT PRICE
+========================================================= */
 
 function formatPrice(
   price: number,
   currency: string
-) {
+): string {
   return (
     new Intl.NumberFormat("fr-FR", {
       maximumFractionDigits: 2,
-    }).format(price) + ` ${currency}`
+    }).format(price) +
+    ` ${currency}`
   );
 }
 
-// =====================================================
-// CONVERSION USD / CDF
-// =====================================================
+/* =========================================================
+   CONVERT TO USD
+========================================================= */
 
 function convertToUsd(
   amount: number,
@@ -186,11 +209,17 @@ function convertToUsd(
   }
 
   if (currency === "CDF") {
-    return amount / USD_TO_CDF_RATE;
+    return (
+      amount / USD_TO_CDF_RATE
+    );
   }
 
   return amount;
 }
+
+/* =========================================================
+   CONVERT TO CDF
+========================================================= */
 
 function convertToCdf(
   amount: number,
@@ -201,18 +230,25 @@ function convertToCdf(
   }
 
   if (currency === "USD") {
-    return amount * USD_TO_CDF_RATE;
+    return (
+      amount * USD_TO_CDF_RATE
+    );
   }
 
   return amount;
 }
 
-// =====================================================
-// PRODUCT TYPE
-// =====================================================
+/* =========================================================
+   PRODUCT TYPE
+========================================================= */
 
-function formatProductType(type: string) {
-  const types: Record<string, string> = {
+function formatProductType(
+  type: string
+): string {
+  const types: Record<
+    string,
+    string
+  > = {
     PHYSICAL: "Produit physique",
     DIGITAL: "Produit numérique",
     COURSE: "Formation",
@@ -224,9 +260,9 @@ function formatProductType(type: string) {
   return types[type] || type;
 }
 
-// =====================================================
-// FIELD TYPE
-// =====================================================
+/* =========================================================
+   FIELD TYPE
+========================================================= */
 
 function getFieldType(
   type: string
@@ -255,40 +291,42 @@ function getFieldType(
   return "TEXT";
 }
 
-// =====================================================
-// PAGE
-// =====================================================
+/* =========================================================
+   COMPONENT
+========================================================= */
 
 export default function PublicPaymentPage() {
   const params = useParams();
 
-  // ===================================================
-  // SLUG
-  // ===================================================
+  /* =======================================================
+     RAW SLUG
+  ======================================================= */
 
   const rawSlug = params?.slug;
 
-  const slug = useMemo(() => {
-    if (Array.isArray(rawSlug)) {
-      return rawSlug[0];
-    }
+  /*
+    IMPORTANT :
 
-    if (
-      typeof rawSlug === "string" &&
-      rawSlug.trim()
-    ) {
-      return rawSlug;
-    }
+    On transforme immédiatement le paramètre
+    en string | undefined.
 
-    return undefined;
-  }, [rawSlug]);
+    Cela évite de transmettre directement
+    string | undefined à encodeURIComponent().
+  */
 
-  // ===================================================
-  // STATES
-  // ===================================================
+  const slug: string | undefined =
+    Array.isArray(rawSlug)
+      ? rawSlug[0]
+      : typeof rawSlug === "string"
+        ? rawSlug
+        : undefined;
+
+  /* =======================================================
+     STATES
+  ======================================================= */
 
   const [data, setData] =
-    useState<PublicPaymentResponse | null>(
+    useState<PublicPaymentApiResponse | null>(
       null
     );
 
@@ -300,7 +338,10 @@ export default function PublicPaymentPage() {
 
   const [formValues, setFormValues] =
     useState<
-      Record<string, string | boolean>
+      Record<
+        string,
+        string | boolean
+      >
     >({});
 
   const [telecom, setTelecom] =
@@ -312,26 +353,57 @@ export default function PublicPaymentPage() {
   const [paying, setPaying] =
     useState(false);
 
-  const [paymentMessage, setPaymentMessage] =
-    useState<string | null>(null);
+  const [
+    paymentMessage,
+    setPaymentMessage,
+  ] = useState<string | null>(null);
 
-  const [paymentSuccess, setPaymentSuccess] =
-    useState(false);
+  const [
+    paymentSuccess,
+    setPaymentSuccess,
+  ] = useState(false);
 
-  // ===================================================
-  // NOUVEAU :
-  // DEVISE DE PAIEMENT
-  // ===================================================
+  const [
+    transactionId,
+    setTransactionId,
+  ] = useState<string | null>(null);
 
-  const [paymentCurrency, setPaymentCurrency] =
-    useState<PaymentCurrency>("USD");
+  const [
+    paymentStatus,
+    setPaymentStatus,
+  ] = useState<string | null>(null);
 
-  // ===================================================
-  // CHARGER LA PAGE PUBLIQUE
-  // ===================================================
+  const [
+    paymentCurrency,
+    setPaymentCurrency,
+  ] = useState<PaymentCurrency>("USD");
+
+  /* =======================================================
+     CHARGEMENT PAGE PUBLIQUE
+  ======================================================= */
 
   useEffect(() => {
-    if (!slug) {
+    /*
+      IMPORTANT :
+
+      On vérifie slug AVANT de créer
+      la fonction asynchrone.
+
+      Puis on crée une nouvelle constante
+      explicitement typée string.
+
+      Cela supprime définitivement :
+
+      Argument of type
+      'string | undefined'
+      is not assignable to parameter
+      of type 'string | number | boolean'
+    */
+
+    if (
+      typeof slug !== "string" ||
+      !slug.trim()
+    ) {
       setLoading(false);
 
       setError(
@@ -341,6 +413,13 @@ export default function PublicPaymentPage() {
       return;
     }
 
+    /*
+      Ici currentSlug est garanti comme string.
+    */
+
+    const currentSlug: string =
+      slug;
+
     let cancelled = false;
 
     async function loadPage() {
@@ -349,32 +428,67 @@ export default function PublicPaymentPage() {
 
         setError(null);
 
-        const currentSlug = slug;
-
-        if (!currentSlug) {
-          throw new Error(
-            "Le lien de paiement est invalide."
-          );
-        }
+        /* =================================================
+           ENCODER SLUG
+        ================================================= */
 
         const encodedSlug =
-          encodeURIComponent(currentSlug);
+          encodeURIComponent(
+            currentSlug
+          );
+
+        /* =================================================
+           URL
+        ================================================= */
 
         const url =
           `${API_URL}/public/payment-pages/${encodedSlug}`;
 
         console.log(
-          "🔎 URL PAGE PUBLIQUE :",
+          "========================================"
+        );
+
+        console.log(
+          "🔎 API URL :",
+          API_URL
+        );
+
+        console.log(
+          "🔎 SLUG :",
+          currentSlug
+        );
+
+        console.log(
+          "🔎 PAGE URL :",
           url
         );
+
+        console.log(
+          "========================================"
+        );
+
+        /* =================================================
+           REQUEST
+        ================================================= */
 
         const response =
           await fetch(url, {
             method: "GET",
+
             cache: "no-store",
+
+            headers: {
+              Accept:
+                "application/json",
+            },
           });
 
-        let responseData: unknown = null;
+        /* =================================================
+           RESPONSE JSON
+        ================================================= */
+
+        let responseData: unknown =
+          null;
 
         try {
           responseData =
@@ -384,30 +498,54 @@ export default function PublicPaymentPage() {
         }
 
         console.log(
-          "📦 PAGE PUBLIQUE :",
+          "📦 PAGE RESPONSE :",
           responseData
         );
 
+        /* =================================================
+           HTTP ERROR
+        ================================================= */
+
         if (!response.ok) {
-          const message =
-            typeof responseData === "object" &&
+          let message =
+            "Cette page de paiement est indisponible.";
+
+          if (
+            typeof responseData ===
+              "object" &&
             responseData !== null &&
             "message" in responseData
-              ? String(
-                  (
-                    responseData as {
-                      message?: string;
-                    }
-                  ).message
-                )
-              : "Cette page de paiement est indisponible.";
+          ) {
+            const serverMessage =
+              (
+                responseData as {
+                  message?: unknown;
+                }
+              ).message;
 
-          throw new Error(message);
+            if (
+              typeof serverMessage ===
+                "string" &&
+              serverMessage.trim()
+            ) {
+              message =
+                serverMessage;
+            }
+          }
+
+          throw new Error(
+            message
+          );
         }
+
+        /* =================================================
+           VALIDATION RESPONSE
+        ================================================= */
 
         if (
           !responseData ||
-          typeof responseData !== "object"
+          typeof responseData !==
+            "object"
         ) {
           throw new Error(
             "Réponse serveur invalide."
@@ -417,19 +555,39 @@ export default function PublicPaymentPage() {
         const apiData =
           responseData as PublicPaymentApiResponse;
 
-        if (!apiData.success) {
+        /* =================================================
+           API SUCCESS
+        ================================================= */
+
+        if (
+          apiData.success !== true
+        ) {
           throw new Error(
             apiData.message ||
               "Cette page de paiement est indisponible."
           );
         }
 
-        // =============================================
-        // RÉCUPÉRATION DU PRODUIT
-        // =============================================
+        /* =================================================
+           PAYMENT PAGE
+        ================================================= */
+
+        if (
+          !apiData.paymentPage
+        ) {
+          throw new Error(
+            "Page de paiement introuvable."
+          );
+        }
+
+        /* =================================================
+           PRODUCT
+        ================================================= */
 
         const product =
-          Array.isArray(apiData.products)
+          Array.isArray(
+            apiData.products
+          )
             ? apiData.products[0]
             : null;
 
@@ -439,52 +597,45 @@ export default function PublicPaymentPage() {
           );
         }
 
+        /* =================================================
+           CANCELLED
+        ================================================= */
+
         if (cancelled) {
           return;
         }
 
-        // =============================================
-        // ADAPTATION API -> FRONTEND
-        // =============================================
+        /* =================================================
+           SAVE DATA
+        ================================================= */
 
-        const publicData:
-          PublicPaymentResponse = {
-          success:
-            apiData.success,
+        setData(apiData);
 
-          paymentPage:
-            apiData.paymentPage,
-
-          product,
-
-          instructor: null,
-
-          company: null,
-
-          message:
-            apiData.message,
-        };
-
-        setData(publicData);
-
-        // =============================================
-        // INITIALISER LA DEVISE
-        // =============================================
+        /* =================================================
+           INITIAL PAYMENT CURRENCY
+        ================================================= */
 
         if (
-          product.currency === "CDF"
+          product.currency ===
+          "CDF"
         ) {
-          setPaymentCurrency("CDF");
+          setPaymentCurrency(
+            "CDF"
+          );
         } else {
-          setPaymentCurrency("USD");
+          setPaymentCurrency(
+            "USD"
+          );
         }
 
-        // =============================================
-        // INITIALISER CHAMPS FORMULAIRE
-        // =============================================
+        /* =================================================
+           INITIAL FORM VALUES
+        ================================================= */
 
         const fields =
-          Array.isArray(product.fields)
+          Array.isArray(
+            product.fields
+          )
             ? product.fields
             : [];
 
@@ -493,25 +644,30 @@ export default function PublicPaymentPage() {
           string | boolean
         > = {};
 
-        fields.forEach((field) => {
-          if (
-            field.type === "BOOLEAN"
-          ) {
-            initialValues[
-              field.name
-            ] = false;
-          } else {
-            initialValues[
-              field.name
-            ] =
-              field.value || "";
+        fields.forEach(
+          (field) => {
+            if (
+              field.type ===
+              "BOOLEAN"
+            ) {
+              initialValues[
+                field.name
+              ] = false;
+            } else {
+              initialValues[
+                field.name
+              ] =
+                field.value || "";
+            }
           }
-        });
+        );
 
         setFormValues(
           initialValues
         );
-      } catch (err: unknown) {
+      } catch (
+        err: unknown
+      ) {
         if (cancelled) {
           return;
         }
@@ -540,38 +696,42 @@ export default function PublicPaymentPage() {
     };
   }, [slug]);
 
-  // ===================================================
-  // PRODUIT ACTUEL
-  // ===================================================
+  /* =======================================================
+     PRODUCT
+  ======================================================= */
 
   const product =
-    data?.product ?? null;
+    data?.products?.[0] ?? null;
 
-  // ===================================================
-  // CHAMPS PRODUIT
-  // ===================================================
+  /* =======================================================
+     PRODUCT FIELDS
+  ======================================================= */
 
   const productFields =
-    Array.isArray(product?.fields)
+    Array.isArray(
+      product?.fields
+    )
       ? product.fields
       : [];
 
   const hasFields =
     productFields.length > 0;
 
-  // ===================================================
-  // MONTANT ORIGINAL DU PRODUIT
-  // ===================================================
+  /* =======================================================
+     ORIGINAL PRICE
+  ======================================================= */
 
   const originalPrice =
-    product?.price ?? 0;
+    Number(
+      product?.price ?? 0
+    );
 
   const originalCurrency =
     product?.currency || "USD";
 
-  // ===================================================
-  // CALCUL DU MONTANT À PAYER
-  // ===================================================
+  /* =======================================================
+     PAYMENT AMOUNT
+  ======================================================= */
 
   const paymentAmount =
     useMemo(() => {
@@ -587,7 +747,8 @@ export default function PublicPaymentPage() {
       }
 
       if (
-        paymentCurrency === "CDF"
+        paymentCurrency ===
+        "CDF"
       ) {
         return convertToCdf(
           originalPrice,
@@ -606,9 +767,9 @@ export default function PublicPaymentPage() {
       paymentCurrency,
     ]);
 
-  // ===================================================
-  // AFFICHAGE DU PRIX ORIGINAL
-  // ===================================================
+  /* =======================================================
+     PRICE DISPLAY
+  ======================================================= */
 
   const originalPriceDisplay =
     product
@@ -618,19 +779,15 @@ export default function PublicPaymentPage() {
         )
       : "";
 
-  // ===================================================
-  // AFFICHAGE DU PRIX DE PAIEMENT
-  // ===================================================
-
   const paymentPriceDisplay =
     formatPrice(
       paymentAmount,
       paymentCurrency
     );
 
-  // ===================================================
-  // UPDATE CHAMP
-  // ===================================================
+  /* =======================================================
+     UPDATE FIELD
+  ======================================================= */
 
   function updateField(
     fieldName: string,
@@ -639,18 +796,18 @@ export default function PublicPaymentPage() {
     setFormValues(
       (previous) => ({
         ...previous,
-
         [fieldName]:
           value,
       })
     );
   }
 
-  // ===================================================
-  // VALIDATION CHAMPS
-  // ===================================================
+  /* =======================================================
+     VALIDATE FIELDS
+  ======================================================= */
 
-  function validateFields() {
+  function validateFields():
+    string | null {
     for (
       const field of productFields
     ) {
@@ -669,42 +826,59 @@ export default function PublicPaymentPage() {
         value === "" ||
         value === false
       ) {
-        return (
-          `Veuillez remplir le champ "${field.label}".`
-        );
+        return `Veuillez remplir le champ "${field.label}".`;
       }
     }
 
     return null;
   }
 
-  // ===================================================
-  // TELEPHONE RDC
-  // ===================================================
+  /* =======================================================
+     NORMALIZE PHONE
+  ======================================================= */
 
   function normalizePhone(
     value: string
-  ) {
+  ): string {
     let cleaned =
       value.replace(
         /\D/g,
         ""
       );
 
+    /*
+      00XXXXXXXXX
+      -> XXXXXXXXX
+    */
+
     if (
-      cleaned.startsWith("00")
+      cleaned.startsWith(
+        "00"
+      )
     ) {
       cleaned =
         cleaned.substring(2);
     }
 
+    /*
+      0812345678
+      -> 243812345678
+    */
+
     if (
-      cleaned.startsWith("0")
+      cleaned.startsWith(
+        "0"
+      )
     ) {
       cleaned =
         "243" +
         cleaned.substring(1);
     }
+
+    /*
+      812345678
+      -> 243812345678
+    */
 
     if (
       cleaned.length === 9
@@ -717,14 +891,18 @@ export default function PublicPaymentPage() {
     return cleaned;
   }
 
-  // ===================================================
-  // PAIEMENT
-  // ===================================================
+  /* =======================================================
+     PAYMENT
+  ======================================================= */
 
   async function handlePayment(
-    event: FormEvent
+    event: FormEvent<HTMLFormElement>
   ) {
     event.preventDefault();
+
+    /* =====================================================
+       PRODUCT
+    ===================================================== */
 
     if (!product) {
       setPaymentMessage(
@@ -734,9 +912,29 @@ export default function PublicPaymentPage() {
       return;
     }
 
-    setPaymentMessage(null);
+    /* =====================================================
+       RESET
+    ===================================================== */
 
-    setPaymentSuccess(false);
+    setPaymentMessage(
+      null
+    );
+
+    setPaymentSuccess(
+      false
+    );
+
+    setTransactionId(
+      null
+    );
+
+    setPaymentStatus(
+      null
+    );
+
+    /* =====================================================
+       VALIDATE FIELDS
+    ===================================================== */
 
     const fieldsError =
       validateFields();
@@ -749,6 +947,10 @@ export default function PublicPaymentPage() {
       return;
     }
 
+    /* =====================================================
+       VALIDATE TELECOM
+    ===================================================== */
+
     if (!telecom) {
       setPaymentMessage(
         "Veuillez sélectionner un moyen de paiement."
@@ -757,11 +959,16 @@ export default function PublicPaymentPage() {
       return;
     }
 
+    /* =====================================================
+       VALIDATE PHONE
+    ===================================================== */
+
     const normalizedPhone =
       normalizePhone(phone);
 
     if (
-      normalizedPhone.length !== 12 ||
+      normalizedPhone.length !==
+        12 ||
       !normalizedPhone.startsWith(
         "243"
       )
@@ -773,28 +980,46 @@ export default function PublicPaymentPage() {
       return;
     }
 
+    /* =====================================================
+       VALIDATE AMOUNT
+    ===================================================== */
+
+    if (
+      !Number.isFinite(
+        paymentAmount
+      ) ||
+      paymentAmount <= 0
+    ) {
+      setPaymentMessage(
+        "Le montant du paiement est invalide."
+      );
+
+      return;
+    }
+
     try {
       setPaying(true);
 
-      // =============================================
-      // PAYLOAD
-      // =============================================
+      setPaymentMessage(
+        null
+      );
+
+      setPaymentSuccess(
+        false
+      );
+
+      /* ===================================================
+         PAYMENT PAYLOAD
+      =================================================== */
 
       const payload = {
-        productId:
-          product.id,
-
-        paymentPageId:
-          data?.paymentPage.id ??
-          null,
-
-        // Montant converti selon
-        // la devise choisie
         amount:
-          paymentAmount,
+          Number(
+            paymentAmount.toFixed(
+              2
+            )
+          ),
 
-        // Devise choisie par
-        // le client
         currency:
           paymentCurrency,
 
@@ -802,41 +1027,50 @@ export default function PublicPaymentPage() {
           normalizedPhone,
 
         telecom,
-
-        customer: {
-          name:
-            typeof formValues.name ===
-            "string"
-              ? formValues.name
-              : null,
-
-          email:
-            typeof formValues.email ===
-            "string"
-              ? formValues.email
-              : null,
-
-          phone:
-            normalizedPhone,
-        },
-
-        fields:
-          formValues,
       };
 
       console.log(
-        "💳 PAYMENT PAYLOAD",
+        "========================================"
+      );
+
+      console.log(
+        "💳 INITIALISATION PAIEMENT"
+      );
+
+      console.log(
+        "API :",
+        API_URL
+      );
+
+      console.log(
+        "ENDPOINT :",
+        `${API_URL}/payment/initiate`
+      );
+
+      console.log(
+        "PAYLOAD :",
         payload
       );
 
+      console.log(
+        "========================================"
+      );
+
+      /* ===================================================
+         CALL PAYMENT API
+      =================================================== */
+
       const response =
         await fetch(
-          `${API_URL}/public/payments`,
+          `${API_URL}/payment/initiate`,
           {
             method: "POST",
 
             headers: {
               "Content-Type":
+                "application/json",
+
+              Accept:
                 "application/json",
             },
 
@@ -847,39 +1081,133 @@ export default function PublicPaymentPage() {
           }
         );
 
-      let result: any = null;
+      /* ===================================================
+         READ RESPONSE
+      =================================================== */
+
+      let result:
+        PaymentApiResponse | null =
+        null;
 
       try {
         result =
-          await response.json();
+          (await response.json()) as PaymentApiResponse;
       } catch {
         result = null;
       }
 
       console.log(
-        "📦 PAYMENT RESPONSE",
+        "📦 PAYMENT RESPONSE :",
         result
       );
+
+      /* ===================================================
+         HTTP ERROR
+      =================================================== */
 
       if (!response.ok) {
         throw new Error(
           result?.message ||
-            "Impossible d'effectuer le paiement."
+            result?.data?.message ||
+            "Impossible d'initialiser le paiement."
         );
       }
+
+      /* ===================================================
+         API ERROR
+      =================================================== */
+
+      if (
+        !result ||
+        result.success !== true
+      ) {
+        throw new Error(
+          result?.message ||
+            result?.data?.message ||
+            "Le paiement n'a pas pu être initialisé."
+        );
+      }
+
+      /* ===================================================
+         TRANSACTION ID
+      =================================================== */
+
+      const newTransactionId =
+        result.data
+          ?.transactionId ||
+        result.transactionId ||
+        null;
+
+      /* ===================================================
+         STATUS
+      =================================================== */
+
+      const newStatus =
+        result.data
+          ?.status ||
+        result.status ||
+        "pending";
+
+      setTransactionId(
+        newTransactionId
+      );
+
+      setPaymentStatus(
+        newStatus
+      );
+
+      /* ===================================================
+         MESSAGE
+      =================================================== */
+
+      const apiMessage =
+        result.data
+          ?.message ||
+        result.message ||
+        "";
+
+      /* ===================================================
+         PENDING
+      =================================================== */
+
+      if (
+        newStatus.toLowerCase() ===
+          "pending" ||
+        apiMessage
+          .toLowerCase()
+          .includes(
+            "insert pin"
+          )
+      ) {
+        setPaymentSuccess(
+          true
+        );
+
+        setPaymentMessage(
+          apiMessage ||
+            "Transaction envoyée. Veuillez confirmer le paiement sur votre téléphone."
+        );
+
+        return;
+      }
+
+      /* ===================================================
+         SUCCESS
+      =================================================== */
 
       setPaymentSuccess(
         true
       );
 
       setPaymentMessage(
-        "Votre demande de paiement a été envoyée avec succès."
+        apiMessage ||
+          "Paiement initialisé avec succès."
       );
     } catch (
       error: unknown
     ) {
       console.error(
-        "❌ PAYMENT ERROR",
+        "❌ PAYMENT ERROR :",
         error
       );
 
@@ -897,18 +1225,18 @@ export default function PublicPaymentPage() {
     }
   }
 
-  // ===================================================
-  // LOADING
-  // ===================================================
+  /* =======================================================
+     LOADING
+  ======================================================= */
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-slate-50 px-4 py-10">
-        <div className="mx-auto flex min-h-[60vh] max-w-6xl items-center justify-center">
+      <main className="min-h-screen bg-slate-50 px-4 py-12">
+        <div className="mx-auto flex max-w-6xl items-center justify-center">
           <div className="text-center">
             <Loader2
+              size={42}
               className="mx-auto animate-spin text-[#08192D]"
-              size={40}
             />
 
             <p className="mt-4 text-slate-500">
@@ -920,9 +1248,9 @@ export default function PublicPaymentPage() {
     );
   }
 
-  // ===================================================
-  // ERREUR
-  // ===================================================
+  /* =======================================================
+     ERROR
+  ======================================================= */
 
   if (
     error ||
@@ -930,15 +1258,15 @@ export default function PublicPaymentPage() {
     !product
   ) {
     return (
-      <main className="min-h-screen bg-slate-50 px-4 py-10">
-        <div className="mx-auto flex min-h-[60vh] max-w-2xl items-center justify-center">
+      <main className="min-h-screen bg-slate-50 px-4 py-12">
+        <div className="mx-auto flex max-w-xl items-center justify-center">
           <div className="w-full rounded-3xl bg-white p-8 text-center shadow-sm">
             <AlertCircle
+              size={48}
               className="mx-auto text-red-500"
-              size={42}
             />
 
-            <h1 className="mt-4 text-2xl font-bold text-slate-900">
+            <h1 className="mt-5 text-2xl font-bold text-slate-900">
               Page indisponible
             </h1>
 
@@ -952,7 +1280,7 @@ export default function PublicPaymentPage() {
               onClick={() =>
                 window.history.back()
               }
-              className="mt-6 inline-flex items-center rounded-xl bg-[#08192D] px-5 py-3 font-semibold text-white"
+              className="mt-6 inline-flex items-center rounded-xl bg-[#08192D] px-5 py-3 font-semibold text-white transition hover:bg-[#102b48]"
             >
               <ArrowLeft
                 size={18}
@@ -967,16 +1295,16 @@ export default function PublicPaymentPage() {
     );
   }
 
-  // ===================================================
-  // AFFICHAGE
-  // ===================================================
+  /* =======================================================
+     MAIN PAGE
+  ======================================================= */
 
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-8 md:px-6 md:py-12">
       <div className="mx-auto max-w-7xl">
 
         {/* =================================================
-            PAGE HEADER
+            HEADER
         ================================================= */}
 
         <div className="mb-8 text-center">
@@ -990,41 +1318,48 @@ export default function PublicPaymentPage() {
 
           {data.paymentPage.description && (
             <p className="mx-auto mt-3 max-w-2xl text-slate-500">
-              {data.paymentPage.description}
+              {
+                data.paymentPage.description
+              }
             </p>
           )}
         </div>
 
+        {/* =================================================
+            CONTENT
+        ================================================= */}
+
         <div className="grid gap-8 lg:grid-cols-[1fr_420px]">
 
           {/* =================================================
-              PRODUIT
+              PRODUCT
           ================================================= */}
 
           <section className="overflow-hidden rounded-3xl bg-white shadow-sm">
 
-            {/* =============================================
-                IMAGE PRODUIT
-            ============================================= */}
+            {/* =================================================
+                IMAGE
+            ================================================= */}
 
             {product.imageUrl ? (
               <div className="relative aspect-video w-full overflow-hidden bg-slate-100">
-
                 <Image
-                  src={product.imageUrl}
-                  alt={product.name}
+                  src={
+                    product.imageUrl
+                  }
+                  alt={
+                    product.name
+                  }
                   fill
                   priority
                   unoptimized
                   className="object-cover"
                   sizes="(max-width: 1024px) 100vw, 60vw"
                 />
-
               </div>
             ) : (
               <div className="flex aspect-video w-full items-center justify-center bg-slate-100">
                 <div className="text-center text-slate-400">
-
                   <CreditCard
                     className="mx-auto mb-3"
                     size={42}
@@ -1033,14 +1368,13 @@ export default function PublicPaymentPage() {
                   <p className="text-sm">
                     Aucune image disponible
                   </p>
-
                 </div>
               </div>
             )}
 
-            {/* =============================================
-                INFORMATIONS PRODUIT
-            ============================================= */}
+            {/* =================================================
+                PRODUCT INFO
+            ================================================= */}
 
             <div className="p-6 md:p-8">
 
@@ -1061,26 +1395,32 @@ export default function PublicPaymentPage() {
               </div>
 
               <h2 className="text-2xl font-bold text-slate-900 md:text-3xl">
-                {product.name}
+                {
+                  product.name
+                }
               </h2>
 
               {product.subtitle && (
                 <p className="mt-2 text-base font-medium text-slate-500">
-                  {product.subtitle}
+                  {
+                    product.subtitle
+                  }
                 </p>
               )}
 
               {product.description && (
                 <div className="mt-5">
                   <p className="whitespace-pre-line leading-7 text-slate-600">
-                    {product.description}
+                    {
+                      product.description
+                    }
                   </p>
                 </div>
               )}
 
-              {/* =========================================
-                  PRIX ORIGINAL
-              ========================================= */}
+              {/* =================================================
+                  ORIGINAL PRICE
+              ================================================= */}
 
               <div className="mt-7 rounded-2xl bg-slate-50 p-5">
 
@@ -1089,7 +1429,9 @@ export default function PublicPaymentPage() {
                 </p>
 
                 <p className="mt-1 text-3xl font-bold text-[#08192D]">
-                  {originalPriceDisplay}
+                  {
+                    originalPriceDisplay
+                  }
                 </p>
 
               </div>
@@ -1098,7 +1440,7 @@ export default function PublicPaymentPage() {
           </section>
 
           {/* =================================================
-              PAIEMENT
+              PAYMENT
           ================================================= */}
 
           <section>
@@ -1109,6 +1451,10 @@ export default function PublicPaymentPage() {
               }
               className="rounded-3xl bg-white p-6 shadow-sm md:p-7"
             >
+
+              {/* =================================================
+                  PAYMENT HEADER
+              ================================================= */}
 
               <div className="mb-7">
 
@@ -1122,16 +1468,15 @@ export default function PublicPaymentPage() {
 
               </div>
 
-              {/* =========================================
-                  CHAMPS PERSONNALISÉS
-              ========================================= */}
+              {/* =================================================
+                  PRODUCT FIELDS
+              ================================================= */}
 
               {hasFields && (
                 <div className="mb-7 space-y-5">
 
                   {productFields.map(
                     (field) => {
-
                       const fieldType =
                         getFieldType(
                           field.type
@@ -1144,12 +1489,16 @@ export default function PublicPaymentPage() {
 
                       return (
                         <div
-                          key={field.id}
+                          key={
+                            field.id
+                          }
                         >
 
                           <label className="mb-2 block text-sm font-semibold text-slate-700">
 
-                            {field.label}
+                            {
+                              field.label
+                            }
 
                             {field.required && (
                               <span className="ml-1 text-red-500">
@@ -1159,7 +1508,9 @@ export default function PublicPaymentPage() {
 
                           </label>
 
-                          {/* TEXT */}
+                          {/* =================================================
+                              TEXT
+                          ================================================= */}
 
                           {fieldType ===
                             "TEXT" && (
@@ -1172,18 +1523,22 @@ export default function PublicPaymentPage() {
                                   : ""
                               }
                               onChange={(
-                                e
+                                event
                               ) =>
                                 updateField(
                                   field.name,
-                                  e.target.value
+                                  event
+                                    .target
+                                    .value
                                 )
                               }
                               className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-[#08192D] focus:ring-2 focus:ring-slate-200"
                             />
                           )}
 
-                          {/* EMAIL */}
+                          {/* =================================================
+                              EMAIL
+                          ================================================= */}
 
                           {fieldType ===
                             "EMAIL" && (
@@ -1203,11 +1558,13 @@ export default function PublicPaymentPage() {
                                     : ""
                                 }
                                 onChange={(
-                                  e
+                                  event
                                 ) =>
                                   updateField(
                                     field.name,
-                                    e.target.value
+                                    event
+                                      .target
+                                      .value
                                   )
                                 }
                                 className="w-full rounded-xl border border-slate-200 py-3 pl-11 pr-4 outline-none transition focus:border-[#08192D] focus:ring-2 focus:ring-slate-200"
@@ -1216,7 +1573,9 @@ export default function PublicPaymentPage() {
                             </div>
                           )}
 
-                          {/* PHONE */}
+                          {/* =================================================
+                              PHONE FIELD
+                          ================================================= */}
 
                           {fieldType ===
                             "PHONE" && (
@@ -1236,11 +1595,13 @@ export default function PublicPaymentPage() {
                                     : ""
                                 }
                                 onChange={(
-                                  e
+                                  event
                                 ) =>
                                   updateField(
                                     field.name,
-                                    e.target.value
+                                    event
+                                      .target
+                                      .value
                                   )
                                 }
                                 placeholder="243812345678"
@@ -1250,7 +1611,9 @@ export default function PublicPaymentPage() {
                             </div>
                           )}
 
-                          {/* NUMBER */}
+                          {/* =================================================
+                              NUMBER
+                          ================================================= */}
 
                           {fieldType ===
                             "NUMBER" && (
@@ -1263,18 +1626,22 @@ export default function PublicPaymentPage() {
                                   : ""
                               }
                               onChange={(
-                                e
+                                event
                               ) =>
                                 updateField(
                                   field.name,
-                                  e.target.value
+                                  event
+                                    .target
+                                    .value
                                 )
                               }
                               className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-[#08192D] focus:ring-2 focus:ring-slate-200"
                             />
                           )}
 
-                          {/* DATE */}
+                          {/* =================================================
+                              DATE
+                          ================================================= */}
 
                           {fieldType ===
                             "DATE" && (
@@ -1287,18 +1654,22 @@ export default function PublicPaymentPage() {
                                   : ""
                               }
                               onChange={(
-                                e
+                                event
                               ) =>
                                 updateField(
                                   field.name,
-                                  e.target.value
+                                  event
+                                    .target
+                                    .value
                                 )
                               }
                               className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-[#08192D] focus:ring-2 focus:ring-slate-200"
                             />
                           )}
 
-                          {/* TEXTAREA */}
+                          {/* =================================================
+                              TEXTAREA
+                          ================================================= */}
 
                           {fieldType ===
                             "TEXTAREA" && (
@@ -1310,11 +1681,13 @@ export default function PublicPaymentPage() {
                                   : ""
                               }
                               onChange={(
-                                e
+                                event
                               ) =>
                                 updateField(
                                   field.name,
-                                  e.target.value
+                                  event
+                                    .target
+                                    .value
                                 )
                               }
                               rows={4}
@@ -1322,7 +1695,9 @@ export default function PublicPaymentPage() {
                             />
                           )}
 
-                          {/* SELECT */}
+                          {/* =================================================
+                              SELECT
+                          ================================================= */}
 
                           {fieldType ===
                             "SELECT" && (
@@ -1334,11 +1709,13 @@ export default function PublicPaymentPage() {
                                   : ""
                               }
                               onChange={(
-                                e
+                                event
                               ) =>
                                 updateField(
                                   field.name,
-                                  e.target.value
+                                  event
+                                    .target
+                                    .value
                                 )
                               }
                               className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-[#08192D] focus:ring-2 focus:ring-slate-200"
@@ -1359,7 +1736,9 @@ export default function PublicPaymentPage() {
                             </select>
                           )}
 
-                          {/* BOOLEAN */}
+                          {/* =================================================
+                              BOOLEAN
+                          ================================================= */}
 
                           {fieldType ===
                             "BOOLEAN" && (
@@ -1372,24 +1751,30 @@ export default function PublicPaymentPage() {
                                   true
                                 }
                                 onChange={(
-                                  e
+                                  event
                                 ) =>
                                   updateField(
                                     field.name,
-                                    e.target.checked
+                                    event
+                                      .target
+                                      .checked
                                   )
                                 }
                                 className="h-5 w-5"
                               />
 
                               <span className="text-sm text-slate-600">
-                                {field.label}
+                                {
+                                  field.label
+                                }
                               </span>
 
                             </label>
                           )}
 
-                          {/* FILE / IMAGE */}
+                          {/* =================================================
+                              FILE / IMAGE
+                          ================================================= */}
 
                           {(
                             fieldType ===
@@ -1417,9 +1802,9 @@ export default function PublicPaymentPage() {
                 </div>
               )}
 
-              {/* =========================================
-                  DEVISE DE PAIEMENT
-              ========================================= */}
+              {/* =================================================
+                  CURRENCY
+              ================================================= */}
 
               <div className="mb-7">
 
@@ -1445,6 +1830,7 @@ export default function PublicPaymentPage() {
                         : "border-slate-200 bg-white text-slate-700 hover:border-slate-400"
                     }`}
                   >
+
                     <span className="block text-sm font-bold">
                       🇺🇸 USD
                     </span>
@@ -1459,6 +1845,7 @@ export default function PublicPaymentPage() {
                     >
                       Dollar américain
                     </span>
+
                   </button>
 
                   {/* CDF */}
@@ -1477,6 +1864,7 @@ export default function PublicPaymentPage() {
                         : "border-slate-200 bg-white text-slate-700 hover:border-slate-400"
                     }`}
                   >
+
                     <span className="block text-sm font-bold">
                       🇨🇩 CDF
                     </span>
@@ -1491,25 +1879,24 @@ export default function PublicPaymentPage() {
                     >
                       Franc congolais
                     </span>
+
                   </button>
 
                 </div>
 
                 <p className="mt-3 text-xs text-slate-400">
-                  Taux appliqué : 1 USD =
-                  {" "}
+                  Taux appliqué : 1 USD ={" "}
                   {USD_TO_CDF_RATE.toLocaleString(
                     "fr-FR"
-                  )}
-                  {" "}
+                  )}{" "}
                   CDF
                 </p>
 
               </div>
 
-              {/* =========================================
+              {/* =================================================
                   TELECOM
-              ========================================= */}
+              ================================================= */}
 
               <div>
 
@@ -1520,10 +1907,22 @@ export default function PublicPaymentPage() {
                 <div className="grid grid-cols-2 gap-3">
 
                   {[
-                    ["AM", "Airtel Money"],
-                    ["OM", "Orange Money"],
-                    ["MP", "M-Pesa"],
-                    ["AF", "Afrimoney"],
+                    [
+                      "AM",
+                      "Airtel Money",
+                    ],
+                    [
+                      "OM",
+                      "Orange Money",
+                    ],
+                    [
+                      "MP",
+                      "M-Pesa",
+                    ],
+                    [
+                      "AF",
+                      "Afrimoney",
+                    ],
                   ].map(
                     ([code, label]) => (
                       <button
@@ -1564,9 +1963,9 @@ export default function PublicPaymentPage() {
                 </div>
               </div>
 
-              {/* =========================================
+              {/* =================================================
                   PHONE
-              ========================================= */}
+              ================================================= */}
 
               <div className="mt-6">
 
@@ -1584,9 +1983,11 @@ export default function PublicPaymentPage() {
                   <input
                     type="tel"
                     value={phone}
-                    onChange={(e) =>
+                    onChange={(
+                      event
+                    ) =>
                       setPhone(
-                        e.target.value
+                        event.target.value
                       )
                     }
                     placeholder="243812345678"
@@ -1601,9 +2002,9 @@ export default function PublicPaymentPage() {
 
               </div>
 
-              {/* =========================================
-                  RÉSUMÉ
-              ========================================= */}
+              {/* =================================================
+                  SUMMARY
+              ================================================= */}
 
               <div className="mt-7 rounded-2xl bg-slate-50 p-4">
 
@@ -1614,61 +2015,88 @@ export default function PublicPaymentPage() {
                   </span>
 
                   <span className="text-xl font-bold text-[#08192D]">
-                    {paymentPriceDisplay}
+                    {
+                      paymentPriceDisplay
+                    }
                   </span>
 
                 </div>
 
-                {/* =====================================
-                    PRIX DE RÉFÉRENCE
-                ===================================== */}
-
                 {paymentCurrency !==
                   originalCurrency && (
                   <p className="mt-2 text-right text-xs text-slate-400">
-                    Prix de référence :
-                    {" "}
-                    {originalPriceDisplay}
+                    Prix de référence :{" "}
+                    {
+                      originalPriceDisplay
+                    }
                   </p>
                 )}
 
               </div>
 
-              {/* =========================================
-                  MESSAGE
-              ========================================= */}
+              {/* =================================================
+                  PAYMENT MESSAGE
+              ================================================= */}
 
               {paymentMessage && (
                 <div
-                  className={`mt-5 flex items-start gap-3 rounded-xl p-4 ${
+                  className={`mt-5 rounded-xl p-4 ${
                     paymentSuccess
                       ? "bg-green-100 text-green-700"
                       : "bg-red-100 text-red-700"
                   }`}
                 >
 
-                  {paymentSuccess ? (
-                    <CheckCircle2
-                      size={20}
-                      className="mt-0.5 shrink-0"
-                    />
-                  ) : (
-                    <AlertCircle
-                      size={20}
-                      className="mt-0.5 shrink-0"
-                    />
-                  )}
+                  <div className="flex items-start gap-3">
 
-                  <p className="text-sm font-medium">
-                    {paymentMessage}
-                  </p>
+                    {paymentSuccess ? (
+                      <CheckCircle2
+                        size={20}
+                        className="mt-0.5 shrink-0"
+                      />
+                    ) : (
+                      <AlertCircle
+                        size={20}
+                        className="mt-0.5 shrink-0"
+                      />
+                    )}
+
+                    <div>
+
+                      <p className="text-sm font-medium">
+                        {
+                          paymentMessage
+                        }
+                      </p>
+
+                      {transactionId && (
+                        <p className="mt-2 text-xs font-semibold">
+                          Transaction :{" "}
+                          {
+                            transactionId
+                          }
+                        </p>
+                      )}
+
+                      {paymentStatus && (
+                        <p className="mt-1 text-xs">
+                          Statut :{" "}
+                          {
+                            paymentStatus
+                          }
+                        </p>
+                      )}
+
+                    </div>
+
+                  </div>
 
                 </div>
               )}
 
-              {/* =========================================
+              {/* =================================================
                   PAYMENT BUTTON
-              ========================================= */}
+              ================================================= */}
 
               <button
                 type="submit"
@@ -1692,15 +2120,17 @@ export default function PublicPaymentPage() {
                     />
 
                     Payer{" "}
-                    {paymentPriceDisplay}
+                    {
+                      paymentPriceDisplay
+                    }
                   </>
                 )}
 
               </button>
 
-              {/* =========================================
+              {/* =================================================
                   SECURITY
-              ========================================= */}
+              ================================================= */}
 
               <div className="mt-5 flex items-center justify-center gap-2 text-xs text-slate-400">
 
@@ -1714,6 +2144,7 @@ export default function PublicPaymentPage() {
 
             </form>
           </section>
+
         </div>
       </div>
     </main>
