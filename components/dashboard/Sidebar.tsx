@@ -104,13 +104,15 @@ href: "/dashboard/api-keys",
 icon: KeyRound,
 },
 
+
+
 // ===================================================
-// ABONNEMENT
+// CONTSCTS
 // ===================================================
 
 {
-name: "Abonnement",
-href: "/dashboard/subscriptions",
+name: "Contactez nous",
+href: "/dashboard/contacts",
 icon: CreditCard,
 },
 

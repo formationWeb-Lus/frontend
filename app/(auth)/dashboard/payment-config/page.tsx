@@ -395,13 +395,12 @@ export default function PaymentConfigDashboardPage() {
                 </h2>
 
                 <p className="mt-2 max-w-4xl text-sm leading-6 text-blue-800">
-                  Les coordonnées renseignées ici ne constituent
-                  pas un moyen de paiement directement connecté à
+                  Les coordonnées renseignées ici  constituent
+                   un moyen de paiement directement connecté à
                   votre compte personnel. Les paiements des clients
                   sont d'abord reçus et suivis par la plateforme.
                   La plateforme identifie ensuite le produit et
-                  l'entrepreneur concerné afin de procéder au
-                  reversement selon le fonctionnement prévu.
+                  l'entrepreneur concerné afin de valider son paiement.
                 </p>
 
               </div>
@@ -853,15 +852,15 @@ export default function PaymentConfigDashboardPage() {
               <p className="mt-2 text-sm leading-6 text-slate-500">
                 Vous pouvez enregistrer plusieurs coordonnées
                 Mobile Money et Visa. Ces informations servent
-                principalement à identifier le bénéficiaire du
-                reversement. Elles ne remplacent pas le système
+                principalement à identifier le bénéficiaire.
+                 Elles ne remplacent pas le système
                 de paiement de la plateforme.
               </p>
 
               <p className="mt-2 text-sm leading-6 text-slate-500">
                 Lorsqu'un client paie un produit, la plateforme
                 conserve les informations de la transaction afin
-                que l'administration puisse identifier l'entrepreneur
+                que la platform puisse identifier l'entrepreneur
                 concerné et effectuer ensuite le reversement sur
                 les coordonnées configurées.
               </p>

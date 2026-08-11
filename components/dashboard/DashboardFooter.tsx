@@ -185,7 +185,7 @@ export default function DashboardFooter() {
 
 
             <a
-              href="mailto:contact@paylink.cd"
+              href="mailto:africoms879@gmail.com"
               className="
                 flex
                 items-center
@@ -199,14 +199,14 @@ export default function DashboardFooter() {
 
               <Mail size={18}/>
 
-              contact@paylink.cd
+              africoms879@gmail.com
 
             </a>
 
 
 
             <a
-              href="tel:+243000000000"
+              href="tel:+243899864081"
               className="
                 flex
                 items-center
@@ -220,14 +220,14 @@ export default function DashboardFooter() {
 
               <Phone size={18}/>
 
-              +243 XXX XXX XXX
+              +243 89864081
 
             </a>
 
 
 
             <a
-              href="https://wa.me/243000000000"
+              href="https://wa.me/243995271831"
               target="_blank"
               className="
                 flex
