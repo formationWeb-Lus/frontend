@@ -5,10 +5,9 @@ import Link from "next/link";
 import Image from "next/image";
 import { Menu, X, Sparkles } from "lucide-react";
 
-// Correction : Définition des liens de navigation
 const navItems = [
-  { label: "se connectez", href: "/login" },
-  { label: "commencez", href: "/register" },
+  { label: "Fonctionnalités", href: "#features" },
+  { label: "Tarifs", href: "#pricing" },
 ];
 
 export default function Header() {
@@ -44,17 +43,19 @@ export default function Header() {
         </Link>
 
         {/* Navigation Desktop */}
-        <nav className="hidden items-center gap-8 lg:flex">
-          {navItems.map((item) => (
-            <Link
-              key={item.label}
-              href={item.href}
-              className="text-sm font-medium text-slate-300 transition hover:text-yellow-400"
-            >
-              {item.label}
-            </Link>
-          ))}
-        </nav>
+        {navItems.length > 0 && (
+          <nav className="hidden items-center gap-8 lg:flex">
+            {navItems.map((item) => (
+              <Link
+                key={item.label}
+                href={item.href}
+                className="text-sm font-medium text-slate-300 transition hover:text-yellow-400"
+              >
+                {item.label}
+              </Link>
+            ))}
+          </nav>
+        )}
 
         {/* Boutons d'action Desktop */}
         <div className="hidden items-center gap-4 lg:flex">

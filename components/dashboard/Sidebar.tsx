@@ -15,6 +15,7 @@ import {
   LogOut,
   Megaphone,
   Building2,
+  Mail,
   X,
 } from "lucide-react";
 
@@ -27,7 +28,7 @@ const menuItems = [
   { name: "Clients", href: "/dashboard/customers", icon: Users },
   { name: "Mon entreprise", href: "/store", icon: Building2 },
   { name: "Clés API", href: "/dashboard/api-keys", icon: KeyRound },
-  { name: "Contactez-nous", href: "/dashboard/contacts", icon: CreditCard },
+  { name: "Contactez-nous", href: "/dashboard/contacts", icon: Mail },
   { name: "Paramètres", href: "/dashboard/settings", icon: Settings },
 ];
 
@@ -123,7 +124,6 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
         {/* PROFIL */}
         <div className="mt-6 rounded-2xl bg-white/10 p-4">
           <p className="text-sm font-semibold text-white">Mon compte</p>
-          {/* Correction du contraste WCAG : passage de text-slate-400 à text-slate-300 */}
           <p className="mt-0.5 text-xs text-slate-300">Entreprise PayLink</p>
 
           <button
