@@ -1,120 +1,89 @@
 import Image from "next/image";
 
-const paymentMethods = [
-  {
-    name: "Airtel Money",
-    logo: "/icons/airtel.png",
-  },
-  {
-    name: "Orange Money",
-    logo: "/icons/orange.png",
-  },
-  {
-    name: "M-Pesa",
-    logo: "/icons/mpsa.png",
-  },
-  {
-    name: "Afrimoney",
-    logo: "/icons/afrimoney.png",
-  },
-  {
-    name: "Visa",
-    logo: "/icons/visa.jpg",
-  },
+const channels = [
+  { name: "Facebook Ads", logo: "/icons/facebook.png" },
+  { name: "Instagram Ads", logo: "/icons/instangram.jpg" },
+  { name: "TikTok Ads", logo: "/icons/tikitok.png" },
+  { name: "Google Maps", logo: "/icons/googlemap.png" },
+  { name: "WhatsApp Business", logo: "/icons/whatsapp.jpg" },
 ];
 
 const stats = [
   {
-    value: "99.9%",
-    label: "Disponibilité",
+    value: "+300%",
+    label: "Augmentation de visibilité locale",
   },
   {
-    value: "< 5 sec",
-    label: "Temps moyen de paiement",
-  },
-  {
-    value: "24/7",
-    label: "Support",
+    value: "< 24h",
+    label: "Pour lancer vos publicités géolocalisées",
   },
   {
     value: "100%",
-    label: "Paiements sécurisés",
+    label: "Campagnes analysées et recommandées par IA",
+  },
+  {
+    value: "x3",
+    label: "Plus de messages WhatsApp clients",
   },
 ];
 
 export default function TrustedCompanies() {
   return (
-    <section className="bg-white py-20">
+    <section className="bg-white py-20 lg:py-28">
       <div className="mx-auto max-w-7xl px-6">
         {/* Titre */}
         <div className="text-center">
-          <span className="rounded-full bg-yellow-100 px-4 py-2 text-sm font-semibold text-yellow-700">
-            Moyens de paiement
+          <span className="rounded-full bg-yellow-100 px-4 py-2 text-sm font-semibold text-yellow-800">
+            Couverture Réseaux & Canaux
           </span>
 
-          <h2 className="mt-6 text-4xl font-bold text-slate-900">
-            Acceptez les paiements avec les services
-            <span className="block text-[#08192D]">
-              les plus utilisés en Afrique
-            </span>
+          <h2 className="mt-6 text-4xl font-extrabold text-slate-900 lg:text-5xl">
+            Soyez visible là où vos clients{" "}
+            <span className="text-[#08192D]">passent leur journée</span>
           </h2>
 
           <p className="mx-auto mt-5 max-w-3xl text-lg text-slate-600">
-            PayLink vous permet d'intégrer plusieurs solutions de paiement
-            afin d'offrir une meilleure expérience à vos clients.
+            Notre plateforme diffuse vos offres sur toutes les applications phares
+            utilisées quotidiennement à votre geolocalisation.
           </p>
         </div>
 
-        {/* Logos */}
-        <div className="mt-16 grid grid-cols-2 gap-8 md:grid-cols-3 lg:grid-cols-5">
-          {paymentMethods.map((method) => (
+        {/* Logos des réseaux */}
+        <div className="mt-16 grid grid-cols-2 gap-6 md:grid-cols-3 lg:grid-cols-5">
+          {channels.map((channel) => (
             <div
-              key={method.name}
-              className="
-                flex
-                flex-col
-                items-center
-                justify-center
-                rounded-3xl
-                border
-                border-slate-200
-                bg-white
-                p-8
-                shadow-sm
-                transition-all
-                duration-300
-                hover:-translate-y-2
-                hover:shadow-xl
-              "
+              key={channel.name}
+              className="flex flex-col items-center justify-center rounded-3xl border border-slate-200 bg-slate-50/50 p-8 transition-all duration-300 hover:-translate-y-2 hover:border-yellow-400 hover:bg-white hover:shadow-xl"
             >
-              <Image
-                src={method.logo}
-                alt={method.name}
-                width={60}
-                height={60}
-              />
+              <div className="relative h-14 w-14">
+                <Image
+                  src={channel.logo}
+                  alt={channel.name}
+                  fill
+                  className="object-contain"
+                />
+              </div>
 
-              <p className="mt-4 font-semibold text-slate-700">
-                {method.name}
+              <p className="mt-4 font-bold text-slate-800 text-center">
+                {channel.name}
               </p>
             </div>
           ))}
         </div>
 
-        {/* Statistiques */}
+        {/* Statistiques d'impact */}
         <div className="mt-20 grid gap-8 md:grid-cols-2 lg:grid-cols-4">
           {stats.map((stat) => (
             <div
               key={stat.label}
-              className="rounded-3xl bg-[#08192D] p-8 text-center text-white"
+              className="relative overflow-hidden rounded-3xl bg-[#08192D] p-8 text-center text-white shadow-xl"
             >
-              <h3 className="text-4xl font-extrabold text-yellow-400">
+              <div className="absolute top-0 right-0 -mr-4 -mt-4 h-20 w-20 rounded-full bg-yellow-400/10 blur-xl" />
+              <h3 className="text-4xl font-black text-yellow-400 lg:text-5xl">
                 {stat.value}
               </h3>
 
-              <p className="mt-3 text-slate-300">
-                {stat.label}
-              </p>
+              <p className="mt-3 text-slate-300 font-medium">{stat.label}</p>
             </div>
           ))}
         </div>

@@ -1,338 +1,67 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+🛠️ Plan de Réalisation Chronologique (Tâche par Tâche)
+[ Phase 1: Config APIs ] ➔ [ Phase 2: Backend ] ➔ [ Phase 3: Frontend ] ➔ [ Phase 4: Tests ]
+🟢 PHASE 1 : Configuration des Clés & APIs Tierces (Jour 1)
+Tâche 1.1 — Compte Développeur Meta :
 
-## Getting Started
+Créer un compte sur Meta for Developers.
 
-First, run the development server:
+Générer les jetons d'accès (Access Token) pour la Meta Marketing API et l'API WhatsApp Business.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+Tâche 1.2 — Clé API IA (OpenAI) :
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Créer un compte OpenAI et récupérer une clé API pour les modèles GPT-4o (texte/analyses) et DALL-E 3 (visuels).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Tâche 1.3 — Service de Cartographie :
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+S'inscrire sur Mapbox ou Google Maps Platform pour obtenir la clé publique nécessaire à la sélection des cartes.
 
-## Learn More
+🔵 PHASE 2 : Développement du Backend (Jour 2 - Jour 4)
+Tâche 2.1 — Base de données & Authentification :
 
-To learn more about Next.js, take a look at the following resources:
+Configurer la base de données (PostgreSQL via Supabase ou MongoDB) pour stocker les profils clients, leurs campagnes et leurs jetons publicitaires.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Tâche 2.2 — Module de Géolocalisation :
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Créer un endpoint API (POST /api/campaigns/geo) recevant latitude/longitude et le rayon de ciblage pour structurer le JSON requis par la Meta API.
 
-## Deploy on Vercel
+Tâche 2.3 — Moteur IA de Génération :
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Développer le script qui envoie la description du commerce du client à OpenAI, puis reçoit en retour : 3 slogans, un texte accrocheur et une image/visuel.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Tâche 2.4 — Orchestrateur de Publication (Meta API) :
 
+Créer le script qui envoie la campagne complète (visuel, texte, zone GPS, bouton WhatsApp) à la régie publicitaire via l'API.
 
+Tâche 2.5 — Moteur de Webhook & Statistiques :
 
-frontend/
-│
-├── public/
-│   ├── images/
-│   │   ├── logo.png
-│   │   ├── hero.png
-│   │   ├── payment.png
-│   │   └── avatar.png
-│   │
-│   ├── icons/
-│   │   ├── airtel.svg
-│   │   ├── orange.svg
-│   │   ├── mpesa.svg
-│   │   ├── afrimoney.svg
-│   │   └── visa.svg
-│   │
-│   └── favicon.ico
-│
-├── src/
-│
-│   ├── app/
-│   │
-│   │   ├── (auth)/
-│   │   │
-│   │   │   ├── login/
-│   │   │   │      page.tsx
-│   │   │   │
-│   │   │   ├── register/
-│   │   │   │      page.tsx
-│   │   │   │
-│   │   │   ├── forgot-password/
-│   │   │   │      page.tsx
-│   │   │   │
-│   │   │   └── reset-password/
-│   │   │          page.tsx
-│   │   │
-│   │   ├── dashboard/
-│   │   │
-│   │   │   ├── layout.tsx
-│   │   │   │
-│   │   │   ├── overview/
-│   │   │   │      page.tsx
-│   │   │   │
-│   │   │   ├── products/
-│   │   │   │      page.tsx
-│   │   │   │
-│   │   │   ├── payment-pages/
-│   │   │   │      page.tsx
-│   │   │   │
-│   │   │   ├── transactions/
-│   │   │   │      page.tsx
-│   │   │   │
-│   │   │   ├── subscriptions/
-│   │   │   │      page.tsx
-│   │   │   │
-│   │   │   ├── customers/
-│   │   │   │      page.tsx
-│   │   │   │
-│   │   │   ├── analytics/
-│   │   │   │      page.tsx
-│   │   │   │
-│   │   │   ├── api-keys/
-│   │   │   │      page.tsx
-│   │   │   │
-│   │   │   ├── webhooks/
-│   │   │   │      page.tsx
-│   │   │   │
-│   │   │   └── settings/
-│   │   │          page.tsx
-│   │   │
-│   │   ├── admin/
-│   │   │
-│   │   │   ├── layout.tsx
-│   │   │   │
-│   │   │   ├── dashboard/
-│   │   │   │      page.tsx
-│   │   │   │
-│   │   │   ├── users/
-│   │   │   │      page.tsx
-│   │   │   │
-│   │   │   ├── companies/
-│   │   │   │      page.tsx
-│   │   │   │
-│   │   │   ├── subscriptions/
-│   │   │   │      page.tsx
-│   │   │   │
-│   │   │   ├── payments/
-│   │   │   │      page.tsx
-│   │   │   │
-│   │   │   └── settings/
-│   │   │          page.tsx
-│   │   │
-│   │   ├── pay/
-│   │   │
-│   │   │   └── [slug]/
-│   │   │          page.tsx
-│   │   │
-│   │   ├── pricing/
-│   │   │      page.tsx
-│   │   │
-│   │   ├── about/
-│   │   │      page.tsx
-│   │   │
-│   │   ├── contact/
-│   │   │      page.tsx
-│   │   │
-│   │   ├── privacy/
-│   │   │      page.tsx
-│   │   │
-│   │   ├── terms/
-│   │   │      page.tsx
-│   │   │
-│   │   ├── layout.tsx
-│   │   ├── page.tsx
-│   │   ├── loading.tsx
-│   │   ├── error.tsx
-│   │   ├── not-found.tsx
-│   │   └── globals.css
-│   │
-│   ├── components/
-│   │
-│   │   ├── ui/
-│   │   │      Button.tsx
-│   │   │      Input.tsx
-│   │   │      Card.tsx
-│   │   │      Modal.tsx
-│   │   │      Badge.tsx
-│   │   │      Table.tsx
-│   │   │
-│   │   ├── layout/
-│   │   │      Header.tsx
-│   │   │      Footer.tsx
-│   │   │      Sidebar.tsx
-│   │   │      Navbar.tsx
-│   │   │
-│   │   ├── forms/
-│   │   │      LoginForm.tsx
-│   │   │      RegisterForm.tsx
-│   │   │      CompanyForm.tsx
-│   │   │      ProductForm.tsx
-│   │   │
-│   │   ├── dashboard/
-│   │   │      DashboardCard.tsx
-│   │   │      Statistics.tsx
-│   │   │      RecentTransactions.tsx
-│   │   │
-│   │   ├── payment/
-│   │   │      PaymentForm.tsx
-│   │   │      PaymentMethods.tsx
-│   │   │      PaymentSuccess.tsx
-│   │   │
-│   │   ├── charts/
-│   │   │      RevenueChart.tsx
-│   │   │      PaymentChart.tsx
-│   │   │
-│   │   ├── tables/
-│   │   │      ProductsTable.tsx
-│   │   │      TransactionsTable.tsx
-│   │   │
-│   │   ├── cards/
-│   │   │      PlanCard.tsx
-│   │   │      ProductCard.tsx
-│   │   │
-│   │   ├── modals/
-│   │   │      DeleteModal.tsx
-│   │   │      UpgradeModal.tsx
-│   │   │
-│   │   └── shared/
-│   │          Logo.tsx
-│   │          Loader.tsx
-│   │          EmptyState.tsx
-│   │
-│   ├── hooks/
-│   │      useAuth.ts
-│   │      usePayment.ts
-│   │      useSubscription.ts
-│   │
-│   ├── lib/
-│   │      axios.ts
-│   │      auth.ts
-│   │      validators.ts
-│   │
-│   ├── services/
-│   │      auth.service.ts
-│   │      payment.service.ts
-│   │      company.service.ts
-│   │      subscription.service.ts
-│   │
-│   ├── store/
-│   │      auth.store.ts
-│   │      payment.store.ts
-│   │
-│   ├── types/
-│   │      auth.ts
-│   │      payment.ts
-│   │      company.ts
-│   │
-│   ├── utils/
-│   │      formatCurrency.ts
-│   │      formatDate.ts
-│   │      helpers.ts
-│   │
-│   ├── constants/
-│   │      routes.ts
-│   │      plans.ts
-│   │      paymentMethods.ts
-│   │
-│   └── middleware.ts
-│
-├── .env.local
-├── package.json
-├── next.config.ts
-├── tailwind.config.ts
-├── tsconfig.json
-├── postcss.config.js
-└── eslint.config.mjs
+Mettre en place un script automatique (CRON Job) pour récupérer toutes les 6 heures le nombre de clics, dépense publicitaire ($) et conversations WhatsApp initiées.
 
+🟡 PHASE 3 : Intégration du Frontend (Jour 5 - Jour 6)
+Tâche 3.1 — Interface du Tableau de bord (Dashboard) :
 
+Intégrer les métriques en temps réel (Vues, Clics, Messages WhatsApp reçus, Estimation du ROI).
 
-backend/
-│
-├── prisma/
-│   ├── migrations/
-│   ├── schema.prisma
-│   └── seed.ts
-│
-├── src/
-│
-│   ├── config/
-│   │      database.ts
-│   │      jwt.ts
-│   │      redis.ts
-│   │      mail.ts
-│   │      upload.ts
-│   │
-│   ├── controllers/
-│   │      auth.controller.ts
-│   │      user.controller.ts
-│   │      company.controller.ts
-│   │      subscription.controller.ts
-│   │      payment.controller.ts
-│   │      webhook.controller.ts
-│   │      dashboard.controller.ts
-│   │
-│   ├── services/
-│   │      auth.service.ts
-│   │      payment.service.ts
-│   │      company.service.ts
-│   │      subscription.service.ts
-│   │      notification.service.ts
-│   │
-│   ├── repositories/
-│   │      user.repository.ts
-│   │      company.repository.ts
-│   │      payment.repository.ts
-│   │
-│   ├── middlewares/
-│   │      auth.middleware.ts
-│   │      admin.middleware.ts
-│   │      merchant.middleware.ts
-│   │      validate.middleware.ts
-│   │      error.middleware.ts
-│   │
-│   ├── validators/
-│   │      auth.validator.ts
-│   │      payment.validator.ts
-│   │      subscription.validator.ts
-│   │
-│   ├── routes/
-│   │      auth.routes.ts
-│   │      user.routes.ts
-│   │      company.routes.ts
-│   │      payment.routes.ts
-│   │      webhook.routes.ts
-│   │      subscription.routes.ts
-│   │
-│   ├── utils/
-│   │      logger.ts
-│   │      token.ts
-│   │      response.ts
-│   │      encryption.ts
-│   │
-│   ├── jobs/
-│   │      subscription.job.ts
-│   │      reminder.job.ts
-│   │
-│   ├── sockets/
-│   │      socket.ts
-│   │
-│   ├── uploads/
-│   │      logos/
-│   │      products/
-│   │
-│   ├── app.ts
-│   └── server.ts
-│
-├── .env
-├── package.json
-└── tsconfig.json
+Tâche 3.2 — Formulaire de Création de Campagne IA :
+
+Concevoir l'interface où le client saisit le nom de son entreprise, choisit son secteur et voit l'IA générer automatiquement ses visuels.
+
+Tâche 3.3 — Composant Carte Interactive :
+
+Intégrer la carte Mapbox/Google Maps permettant au commerçant de pointer son magasin et d'ajuster le rayon de ciblage (ex: 5 km).
+
+Tâche 3.4 — Module d'Abonnement / Recharge :
+
+Connecter l'interface aux moyens de paiement (Mobile Money ou passerelle de paiement) pour activer les abonnements mensuels.
+
+🔴 PHASE 4 : Tests & Déploiement (Jour 7)
+Tâche 4.1 — Test de Campagne en Mode Sandbox :
+
+Lancer une campagne de test avec l'API Meta en mode développement pour vérifier que les publicités s'affichent correctement et que le bouton WhatsApp redirige bien.
+
+Tâche 4.2 — Déploiement en Production :
+
+Héberger le frontend sur Vercel et le backend sur Render/Railway.
+
+Tâche 4.3 — Lancement du Premier Client pilote :
+
+Lancer la toute première campagne réelle pour valider le flux complet (de la création à la réception des messages WhatsApp).

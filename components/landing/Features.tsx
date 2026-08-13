@@ -1,82 +1,84 @@
 import Link from "next/link";
 import {
-  CreditCard,
-  Link2,
-  Code2,
+  Target,
+  Bot,
+  MessageSquare,
   BarChart3,
-  Webhook,
-  ShieldCheck,
+  MapPin,
+  Sparkles,
   ArrowRight,
 } from "lucide-react";
 
 const features = [
   {
-    title: "Pages de paiement",
+    title: "Publicité Géolocalisée",
     description:
-      "Créez des pages de paiement professionnelles et partagez-les avec vos clients en quelques secondes.",
-    icon: CreditCard,
+      "Touchez les clients exacts qui se trouvent à proximité de votre commerce ou établissement.",
+    icon: MapPin,
+    tag: "Haute précision",
   },
   {
-    title: "Liens de paiement",
+    title: "Intelligence Artificielle & IA",
     description:
-      "Générez un lien sécurisé et envoyez-le via WhatsApp, Facebook, Email ou SMS.",
-    icon: Link2,
+      "Notre plateforme crée, gère et optimise vos campagnes en temps réel pour un impact maximal.",
+    icon: Bot,
+    tag: "Auto-piloté",
   },
   {
-    title: "API REST",
+    title: "Tunnel Conversion WhatsApp",
     description:
-      "Connectez facilement PayLink à votre site web, application mobile ou logiciel.",
-    icon: Code2,
+      "Transformez les vues en conversations directes et en commandes WhatsApp instantanées.",
+    icon: MessageSquare,
+    tag: "Ventes directes",
   },
   {
-    title: "Tableau de bord",
+    title: "Analyses & Recommandations",
     description:
-      "Suivez vos revenus, vos paiements, vos clients et vos statistiques en temps réel.",
+      "Suivez vos performances et recevez des conseils clairs de l'IA pour augmenter votre chiffre d'affaires.",
     icon: BarChart3,
+    tag: "Tableau de bord",
   },
   {
-    title: "Webhooks",
+    title: "Campagnes Multi-canaux",
     description:
-      "Recevez automatiquement les notifications de paiement dans votre application.",
-    icon: Webhook,
+      "Diffusez vos visuels et vidéos sur Facebook, Instagram et TikTok depuis un seul endroit.",
+    icon: Target,
+    tag: "Visibilité 360°",
   },
   {
-    title: "Paiements sécurisés",
+    title: "Rapport de Rentabilité (ROI)",
     description:
-      "Toutes les transactions sont protégées grâce aux meilleures pratiques de sécurité.",
-    icon: ShieldCheck,
+      "Sachez exactement combien chaque dollar investi en publicité vous apporte en nouveaux clients.",
+    icon: Sparkles,
+    tag: "Transparence totale",
   },
 ];
 
 export default function Features() {
   return (
-    <section
-      id="features"
-      className="bg-slate-50 py-24"
-    >
+    <section id="features" className="bg-slate-50 py-20 lg:py-28">
       <div className="mx-auto max-w-7xl px-6">
         {/* Header */}
-
         <div className="mx-auto mb-16 max-w-3xl text-center">
-          <span className="rounded-full bg-yellow-100 px-4 py-2 text-sm font-semibold text-yellow-700">
-            Fonctionnalités
+          <span className="inline-flex items-center gap-2 rounded-full bg-yellow-400/20 px-4 py-2 text-xs font-bold uppercase tracking-wider text-[#08192D]">
+            <Sparkles size={14} className="text-yellow-600" />
+            Plateforme Marketing Intelligente
           </span>
 
           <h2 className="mt-6 text-4xl font-extrabold text-slate-900 lg:text-5xl">
-            Tout ce dont vous avez besoin
-            <span className="block text-[#08192D]">
-              pour accepter des paiements
+            Attirez plus de clients chez vous avec une{" "}
+            <span className="bg-gradient-to-r from-[#08192D] to-yellow-600 bg-clip-text text-transparent">
+              visibilité ciblée et automatique
             </span>
           </h2>
 
           <p className="mt-6 text-lg leading-8 text-slate-600">
-            Une plateforme complète pour créer des pages de paiement,
-            intégrer une API, suivre vos ventes et développer votre entreprise.
+            Une technologie de pointe associée à notre agence pour analyser,
+            créer vos publicités et recommander les meilleures actions pour faire grandir votre activité.
           </p>
         </div>
 
-        {/* Cards */}
-
+        {/* Cards Grid */}
         <div className="grid gap-8 md:grid-cols-2 xl:grid-cols-3">
           {features.map((feature) => {
             const Icon = feature.icon;
@@ -84,64 +86,33 @@ export default function Features() {
             return (
               <div
                 key={feature.title}
-                className="
-                  group
-                  rounded-3xl
-                  border
-                  border-slate-200
-                  bg-white
-                  p-8
-                  shadow-sm
-                  transition-all
-                  duration-300
-                  hover:-translate-y-2
-                  hover:border-yellow-300
-                  hover:shadow-2xl
-                "
+                className="group relative rounded-3xl border border-slate-200/80 bg-white p-8 shadow-sm transition-all duration-300 hover:-translate-y-2 hover:border-yellow-400 hover:shadow-2xl"
               >
-                <div
-                  className="
-                    flex
-                    h-16
-                    w-16
-                    items-center
-                    justify-center
-                    rounded-2xl
-                    bg-[#08192D]
-                    text-yellow-400
-                    transition
-                    group-hover:scale-110
-                  "
-                >
-                  <Icon size={30} />
+                <div className="flex items-center justify-between">
+                  <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[#08192D] text-yellow-400 transition-transform duration-300 group-hover:scale-110">
+                    <Icon size={30} />
+                  </div>
+                  <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-600 group-hover:bg-yellow-100 group-hover:text-yellow-800">
+                    {feature.tag}
+                  </span>
                 </div>
 
                 <h3 className="mt-8 text-2xl font-bold text-slate-900">
                   {feature.title}
                 </h3>
 
-                <p className="mt-4 leading-8 text-slate-600">
+                <p className="mt-4 leading-relaxed text-slate-600">
                   {feature.description}
                 </p>
 
                 <Link
                   href="#"
-                  className="
-                    mt-8
-                    inline-flex
-                    items-center
-                    gap-2
-                    font-semibold
-                    text-[#08192D]
-                    transition
-                    hover:text-yellow-600
-                  "
+                  className="mt-8 inline-flex items-center gap-2 font-bold text-[#08192D] transition hover:text-yellow-600"
                 >
-                  En savoir plus
-
+                  Découvrir cette solution
                   <ArrowRight
                     size={18}
-                    className="transition group-hover:translate-x-1"
+                    className="transition-transform group-hover:translate-x-1"
                   />
                 </Link>
               </div>
