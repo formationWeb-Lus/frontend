@@ -96,7 +96,7 @@ export default function HowItWorks() {
         {/* CTA */}
         <div className="mt-20 text-center">
           <Link
-            href="/contact"
+            href="/dashboard/contacts"
             className="inline-flex items-center gap-3 rounded-2xl bg-yellow-400 px-8 py-5 text-lg font-bold text-[#08192D] shadow-xl transition-all hover:bg-yellow-300 hover:scale-105"
           >
             Lancer ma première campagne

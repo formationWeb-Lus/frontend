@@ -224,15 +224,14 @@ OVERLAY MOBILE
           gap-3
         "
       >
-
-        <Image
-          src="/images/logo.png"
-          alt="PayLink"
-          width={45}
-          height={45}
-          priority
-        />
-
+<Image
+  src="/logo.png"
+  alt="Logo"
+  width={45}
+  height={45}
+  priority
+  className="h-auto w-auto" // <--- Ajoutez cette classe
+/>
         <span
           className="
             text-2xl
