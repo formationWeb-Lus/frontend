@@ -40,6 +40,11 @@ export const metadata: Metadata = {
   creator: "PayLink",
   publisher: "PayLink",
 
+  // Google Search Console
+  verification: {
+    google: "TON_CODE_GOOGLE",
+  },
+
   applicationName: "PayLink",
 
   category: "business",
