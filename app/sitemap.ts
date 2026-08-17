@@ -1,49 +1,49 @@
 import type { MetadataRoute } from "next";
 
-const siteUrl = "https://paylinks.coderise-solution.com";
+const baseUrl = "https://paylinks.coderise-solution.com";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   return [
     {
-      url: siteUrl,
+      url: baseUrl,
       lastModified: new Date(),
       changeFrequency: "weekly",
       priority: 1,
     },
 
     {
-  url: `${siteUrl}/publicite-facebook`,
-  lastModified: new Date(),
-  changeFrequency: "weekly",
-  priority: 0.9,
-},
-
-{
-  url: `${siteUrl}/acquisition-clients`,
-  lastModified: new Date(),
-  changeFrequency: "weekly",
-  priority: 0.95,
-},
-
-    {
-      url: `${siteUrl}/login`,
+      url: `${baseUrl}/services`,
       lastModified: new Date(),
-      changeFrequency: "monthly",
-      priority: 0.3,
+      changeFrequency: "weekly",
+      priority: 0.9,
     },
 
     {
-      url: `${siteUrl}/register`,
+      url: `${baseUrl}/acquisition-clients`,
       lastModified: new Date(),
-      changeFrequency: "monthly",
-      priority: 0.8,
+      changeFrequency: "weekly",
+      priority: 0.9,
     },
 
     {
-      url: `${siteUrl}/pricing`,
+      url: `${baseUrl}/about`,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.7,
+    },
+
+    {
+      url: `${baseUrl}/blog`,
       lastModified: new Date(),
       changeFrequency: "weekly",
       priority: 0.8,
+    },
+
+    {
+      url: `${baseUrl}/contact`,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.7,
     },
   ];
 }
