@@ -19,6 +19,14 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
 
     {
+      url: `${baseUrl}/marketing-digital`,
+      lastModified: new Date(),
+      changeFrequency: "weekly",
+      priority: 0.9,
+    },
+
+
+    {
       url: `${baseUrl}/acquisition-clients`,
       lastModified: new Date(),
       changeFrequency: "weekly",
