@@ -1,481 +1,251 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import Link from "next/link";
 import {
   Users,
-  Crown,
-  Calendar,
+  Sparkles,
   Mail,
+  User,
   Phone,
-  Building2,
-  RefreshCw,
   CheckCircle2,
+  ArrowRight,
+  ShieldCheck,
+  Zap,
+  BellRing,
 } from "lucide-react";
 
-const API_URL =
-  process.env.NEXT_PUBLIC_API_URL ||
-  "https://paylink.coderise-solution.com/api";
+export default function SubscribePage() {
+  const [formData, setFormData] = useState({
+    fullName: "",
+    email: "",
+    phone: "",
+  });
+  const [isSubmitted, setIsSubmitted] = useState(false);
 
-interface Plan {
-  id: number;
-  name: string;
-  priceUSD: number;
-  priceCDF: number;
-}
-
-interface Company {
-  id: number;
-  name: string;
-  logo?: string | null;
-  phone?: string | null;
-  email?: string | null;
-}
-
-interface User {
-  id: number;
-  name?: string | null;
-  email: string;
-  phone?: string | null;
-  role: string;
-  subscriptionStatus: string;
-  company?: Company | null;
-}
-
-interface Subscription {
-  id: number;
-  userId: number;
-  planId: number;
-  status: string;
-  startDate?: string | null;
-  endDate?: string | null;
-  autoRenew: boolean;
-  createdAt: string;
-  user: User;
-  plan: Plan;
-}
-
-interface SubscribersResponse {
-  success: boolean;
-  count: number;
-  data: Subscription[];
-  message?: string;
-}
-
-export default function SubscribersPage() {
-  const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-
-  const fetchSubscribers = async () => {
-    try {
-      setLoading(true);
-      setError("");
-
-      const token =
-        typeof window !== "undefined"
-          ? localStorage.getItem("token")
-          : null;
-
-      const response = await fetch(
-        `${API_URL}/subscriptions/active`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-
-            ...(token
-              ? {
-                  Authorization: `Bearer ${token}`,
-                }
-              : {}),
-          },
-
-          cache: "no-store",
-        }
-      );
-
-      const result: SubscribersResponse =
-        await response.json();
-
-      if (!response.ok || !result.success) {
-        throw new Error(
-          result.message ||
-            "Impossible de récupérer les abonnés."
-        );
-      }
-
-      setSubscriptions(result.data || []);
-    } catch (err: any) {
-      console.error(
-        "Erreur récupération abonnés:",
-        err
-      );
-
-      setError(
-        err?.message ||
-          "Une erreur est survenue."
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchSubscribers();
-  }, []);
-
-  const formatDate = (
-    date?: string | null
-  ) => {
-    if (!date) return "—";
-
-    return new Date(date).toLocaleDateString(
-      "fr-FR",
-      {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-      }
-    );
-  };
-
-  const getInitials = (
-    name?: string | null
-  ) => {
-    if (!name) return "?";
-
-    return name
-      .split(" ")
-      .map((word) => word[0])
-      .slice(0, 2)
-      .join("")
-      .toUpperCase();
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // Logique d'envoi des données à votre API/Backend
+    setIsSubmitted(true);
   };
 
   return (
-    <main className="min-h-screen bg-slate-50 p-6">
-      <div className="mx-auto max-w-7xl">
+    <section className="relative min-h-screen overflow-hidden bg-[#061221] py-16 lg:py-24 text-white flex items-center justify-center">
+      {/* =========================
+          BACKGROUND EFFECTS
+      ========================== */}
+      <div className="absolute -left-32 top-10 h-[420px] w-[420px] rounded-full bg-yellow-500/15 blur-[140px]" />
+      <div className="absolute -right-32 bottom-0 h-[500px] w-[500px] rounded-full bg-blue-600/15 blur-[150px]" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,193,7,0.06),transparent_40%)]" />
 
-        {/* HEADER */}
-        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-
-          <div>
-            <div className="mb-2 flex items-center gap-2">
-              <Users className="h-6 w-6 text-blue-600" />
-
-              <span className="text-sm font-medium text-blue-600">
-                Gestion des abonnements
-              </span>
+      <div className="relative mx-auto max-w-7xl px-6 w-full">
+        <div className="grid items-center gap-12 lg:grid-cols-12 lg:gap-8">
+          
+          {/* =====================================================
+              LEFT — VALUE PROPOSITION & PROOF
+          ====================================================== */}
+          <div className="lg:col-span-7">
+            {/* Hook Badge */}
+            <div className="inline-flex items-center gap-2 rounded-full border border-yellow-400/30 bg-yellow-400/10 px-4 py-2 text-xs font-bold uppercase tracking-wider text-yellow-300 backdrop-blur-md">
+              <Sparkles size={16} className="text-yellow-400" />
+              <span>Rejoignez le Club Privé • Offres Exclusives</span>
             </div>
 
-            <h1 className="text-3xl font-bold text-slate-900">
-              Abonnés actifs
+            {/* Heading */}
+            <h1 className="mt-6 max-w-4xl text-4xl font-black leading-[1.1] tracking-tight text-white sm:text-5xl lg:text-6xl">
+              Restez informé de nos{" "}
+              <br />
+              <span className="bg-gradient-to-r from-yellow-400 via-amber-300 to-yellow-500 bg-clip-text text-transparent">
+                meilleures opportunités.
+              </span>
             </h1>
 
-            <p className="mt-2 text-slate-500">
-              Consultez les entreprises et utilisateurs
-              qui utilisent actuellement votre plateforme.
+            {/* Subtext */}
+            <p className="mt-6 max-w-2xl text-base leading-relaxed text-slate-300 sm:text-lg">
+              Abonnez-vous à notre liste VIP pour recevoir en avant-première nos conseils marketing, 
+              nos nouvelles fonctionnalités et des offres exclusives réservées à nos membres.
             </p>
+
+            {/* Benefits List */}
+            <div className="mt-8 grid gap-4 sm:grid-cols-2">
+              <div className="flex items-start gap-3 rounded-2xl border border-white/5 bg-white/[0.04] p-4 backdrop-blur-md">
+                <div className="mt-0.5 rounded-xl bg-yellow-400/10 p-2.5 text-yellow-400">
+                  <Zap size={20} />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-white">Conseils Stratégiques</p>
+                  <p className="mt-1 text-xs text-slate-400">
+                    Des astuces concrètes pour augmenter vos ventes chaque semaine.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3 rounded-2xl border border-white/5 bg-white/[0.04] p-4 backdrop-blur-md">
+                <div className="mt-0.5 rounded-xl bg-blue-400/10 p-2.5 text-blue-400">
+                  <BellRing size={20} />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-white">Accès Avant-Première</p>
+                  <p className="mt-1 text-xs text-slate-400">
+                    Testez nos outils automatisés par IA avant tout le monde.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Trust points */}
+            <div className="mt-8 flex flex-wrap gap-x-6 gap-y-3 text-xs text-slate-400">
+              <div className="flex items-center gap-2">
+                <CheckCircle2 size={16} className="text-yellow-400" />
+                Zero Spam
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle2 size={16} className="text-yellow-400" />
+                Désabonnement en 1 clic
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle2 size={16} className="text-yellow-400" />
+                Données 100% sécurisées
+              </div>
+            </div>
           </div>
 
-          <button
-            onClick={fetchSubscribers}
-            disabled={loading}
-            className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:opacity-50"
-          >
-            <RefreshCw
-              className={`h-4 w-4 ${
-                loading ? "animate-spin" : ""
-              }`}
-            />
+          {/* =====================================================
+              RIGHT — SUBSCRIPTION FORM CARD
+          ====================================================== */}
+          <div className="relative lg:col-span-5">
+            <div className="relative rounded-3xl border border-white/10 bg-[#08192D]/80 p-6 shadow-2xl backdrop-blur-xl sm:p-8">
+              
+              {!isSubmitted ? (
+                <>
+                  <div className="border-b border-white/10 pb-6">
+                    <span className="rounded-full bg-yellow-400/10 border border-yellow-400/20 px-3 py-1 text-xs font-bold uppercase tracking-wider text-yellow-400">
+                      Inscription Rapide
+                    </span>
+                    <h2 className="mt-3 text-2xl font-extrabold text-white sm:text-3xl">
+                      Devenir Abonné
+                    </h2>
+                    <p className="mt-1 text-xs text-slate-400">
+                      Remplissez vos informations ci-dessous.
+                    </p>
+                  </div>
 
-            Actualiser
-          </button>
+                  <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+                    {/* Nom complet */}
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-300">
+                        Nom Complet
+                      </label>
+                      <div className="relative mt-2">
+                        <div className="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-slate-400">
+                          <User size={18} />
+                        </div>
+                        <input
+                          type="text"
+                          required
+                          value={formData.fullName}
+                          onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                          placeholder="Ex: Jean Dupont"
+                          className="w-full rounded-xl border border-white/10 bg-white/5 py-3.5 pl-10 pr-4 text-sm text-white placeholder-slate-500 focus:border-yellow-400 focus:bg-white/10 focus:outline-none focus:ring-1 focus:ring-yellow-400 transition"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Email */}
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-300">
+                        Adresse E-mail
+                      </label>
+                      <div className="relative mt-2">
+                        <div className="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-slate-400">
+                          <Mail size={18} />
+                        </div>
+                        <input
+                          type="email"
+                          required
+                          value={formData.email}
+                          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                          placeholder="jean@exemple.com"
+                          className="w-full rounded-xl border border-white/10 bg-white/5 py-3.5 pl-10 pr-4 text-sm text-white placeholder-slate-500 focus:border-yellow-400 focus:bg-white/10 focus:outline-none focus:ring-1 focus:ring-yellow-400 transition"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Téléphone / WhatsApp */}
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-300">
+                        Numéro WhatsApp (Optionnel)
+                      </label>
+                      <div className="relative mt-2">
+                        <div className="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-slate-400">
+                          <Phone size={18} />
+                        </div>
+                        <input
+                          type="tel"
+                          value={formData.phone}
+                          onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                          placeholder="+243 ..."
+                          className="w-full rounded-xl border border-white/10 bg-white/5 py-3.5 pl-10 pr-4 text-sm text-white placeholder-slate-500 focus:border-yellow-400 focus:bg-white/10 focus:outline-none focus:ring-1 focus:ring-yellow-400 transition"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Submit Button */}
+                    <button
+                      type="submit"
+                      className="group w-full mt-2 inline-flex items-center justify-center gap-3 rounded-xl bg-gradient-to-r from-yellow-400 to-amber-500 py-4 text-base font-bold text-[#061221] shadow-xl shadow-yellow-500/20 transition-all hover:scale-[1.02] hover:shadow-yellow-500/30 cursor-pointer"
+                    >
+                      <Users size={20} />
+                      <span>Rejoindre la communauté</span>
+                      <ArrowRight
+                        size={20}
+                        className="transition-transform group-hover:translate-x-1"
+                      />
+                    </button>
+                  </form>
+                </>
+              ) : (
+                /* Success State */
+                <div className="py-8 text-center">
+                  <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                    <CheckCircle2 size={36} />
+                  </div>
+                  <h3 className="mt-6 text-2xl font-extrabold text-white">
+                    Félicitations !
+                  </h3>
+                  <p className="mt-3 text-sm text-slate-300">
+                    Votre inscription a été validée avec succès. Vous recevrez très bientôt nos premières informations.
+                  </p>
+                  <button
+                    onClick={() => setIsSubmitted(false)}
+                    className="mt-6 text-xs font-bold text-yellow-400 hover:underline"
+                  >
+                    Inscrire une autre personne
+                  </button>
+                </div>
+              )}
+
+              {/* Security note */}
+              <div className="mt-6 flex items-center justify-center gap-2 border-t border-white/10 pt-4 text-xs text-slate-400">
+                <ShieldCheck size={16} className="text-emerald-400" />
+                <span>Confidentialité garantie à 100%</span>
+              </div>
+            </div>
+
+            {/* Floating Badge */}
+            <div className="absolute -bottom-6 -left-5 hidden items-center gap-3 rounded-2xl border border-yellow-400/30 bg-[#0c1f38] p-4 shadow-xl backdrop-blur-md sm:flex">
+              <div className="rounded-xl bg-yellow-400/15 p-2.5 text-yellow-400">
+                <Users size={22} />
+              </div>
+              <div>
+                <h4 className="text-xs font-bold text-white">+2,500 Abonnés</h4>
+                <p className="text-xs text-slate-400">Ont rejoint ce mois-ci</p>
+              </div>
+            </div>
+          </div>
+
         </div>
-
-        {/* STATISTIQUES */}
-        <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <div className="flex items-center justify-between">
-
-              <div>
-                <p className="text-sm text-slate-500">
-                  Abonnés actifs
-                </p>
-
-                <p className="mt-1 text-3xl font-bold text-slate-900">
-                  {subscriptions.length}
-                </p>
-              </div>
-
-              <div className="rounded-xl bg-blue-50 p-3">
-                <Users className="h-6 w-6 text-blue-600" />
-              </div>
-            </div>
-          </div>
-
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <div className="flex items-center justify-between">
-
-              <div>
-                <p className="text-sm text-slate-500">
-                  Plan Premium
-                </p>
-
-                <p className="mt-1 text-3xl font-bold text-slate-900">
-                  {
-                    subscriptions.filter(
-                      (subscription) =>
-                        subscription.plan?.name
-                          ?.toLowerCase()
-                          .includes("premium")
-                    ).length
-                  }
-                </p>
-              </div>
-
-              <div className="rounded-xl bg-amber-50 p-3">
-                <Crown className="h-6 w-6 text-amber-500" />
-              </div>
-            </div>
-          </div>
-
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <div className="flex items-center justify-between">
-
-              <div>
-                <p className="text-sm text-slate-500">
-                  Renouvellement automatique
-                </p>
-
-                <p className="mt-1 text-3xl font-bold text-slate-900">
-                  {
-                    subscriptions.filter(
-                      (subscription) =>
-                        subscription.autoRenew
-                    ).length
-                  }
-                </p>
-              </div>
-
-              <div className="rounded-xl bg-green-50 p-3">
-                <CheckCircle2 className="h-6 w-6 text-green-600" />
-              </div>
-            </div>
-          </div>
-
-        </div>
-
-        {/* ERREUR */}
-        {error && (
-          <div className="mb-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-            {error}
-          </div>
-        )}
-
-        {/* CHARGEMENT */}
-        {loading ? (
-          <div className="flex min-h-[300px] items-center justify-center rounded-2xl border border-slate-200 bg-white">
-            <div className="text-center">
-              <RefreshCw className="mx-auto h-8 w-8 animate-spin text-blue-600" />
-
-              <p className="mt-3 text-sm text-slate-500">
-                Récupération des abonnés...
-              </p>
-            </div>
-          </div>
-        ) : subscriptions.length === 0 ? (
-          <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center">
-            <Users className="mx-auto h-12 w-12 text-slate-300" />
-
-            <h2 className="mt-4 text-lg font-semibold text-slate-900">
-              Aucun abonné actif
-            </h2>
-
-            <p className="mt-2 text-sm text-slate-500">
-              Aucun abonnement actif n'a été trouvé.
-            </p>
-          </div>
-        ) : (
-          /* TABLE */
-          <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[900px]">
-
-                <thead className="border-b border-slate-200 bg-slate-50">
-                  <tr>
-
-                    <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
-                      Entreprise / Utilisateur
-                    </th>
-
-                    <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
-                      Contact
-                    </th>
-
-                    <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
-                      Plan
-                    </th>
-
-                    <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
-                      Début
-                    </th>
-
-                    <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
-                      Expiration
-                    </th>
-
-                    <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
-                      Statut
-                    </th>
-
-                  </tr>
-                </thead>
-
-                <tbody className="divide-y divide-slate-100">
-
-                  {subscriptions.map(
-                    (subscription) => {
-
-                      const user =
-                        subscription.user;
-
-                      const company =
-                        user?.company;
-
-                      const displayName =
-                        company?.name ||
-                        user?.name ||
-                        "Utilisateur";
-
-                      return (
-                        <tr
-                          key={subscription.id}
-                          className="transition hover:bg-slate-50"
-                        >
-
-                          {/* ENTREPRISE */}
-                          <td className="px-6 py-5">
-
-                            <div className="flex items-center gap-3">
-
-                              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-blue-100 text-sm font-bold text-blue-700">
-                                {getInitials(
-                                  displayName
-                                )}
-                              </div>
-
-                              <div>
-                                <p className="font-semibold text-slate-900">
-                                  {displayName}
-                                </p>
-
-                                <p className="text-xs text-slate-500">
-                                  ID utilisateur :{" "}
-                                  {user?.id}
-                                </p>
-                              </div>
-
-                            </div>
-
-                          </td>
-
-                          {/* CONTACT */}
-                          <td className="px-6 py-5">
-
-                            <div className="space-y-1">
-
-                              <div className="flex items-center gap-2 text-sm text-slate-600">
-                                <Mail className="h-4 w-4" />
-
-                                {user?.email || "—"}
-                              </div>
-
-                              {user?.phone && (
-                                <div className="flex items-center gap-2 text-sm text-slate-500">
-                                  <Phone className="h-4 w-4" />
-
-                                  {user.phone}
-                                </div>
-                              )}
-
-                            </div>
-
-                          </td>
-
-                          {/* PLAN */}
-                          <td className="px-6 py-5">
-
-                            <div className="inline-flex items-center gap-2 rounded-full bg-amber-50 px-3 py-1.5">
-
-                              <Crown className="h-4 w-4 text-amber-500" />
-
-                              <span className="text-sm font-semibold text-amber-700">
-                                {subscription.plan?.name ||
-                                  "—"}
-                              </span>
-
-                            </div>
-
-                          </td>
-
-                          {/* START */}
-                          <td className="px-6 py-5">
-
-                            <div className="flex items-center gap-2 text-sm text-slate-600">
-
-                              <Calendar className="h-4 w-4" />
-
-                              {formatDate(
-                                subscription.startDate
-                              )}
-
-                            </div>
-
-                          </td>
-
-                          {/* END */}
-                          <td className="px-6 py-5">
-
-                            <div className="flex items-center gap-2 text-sm text-slate-600">
-
-                              <Calendar className="h-4 w-4" />
-
-                              {formatDate(
-                                subscription.endDate
-                              )}
-
-                            </div>
-
-                          </td>
-
-                          {/* STATUS */}
-                          <td className="px-6 py-5">
-
-                            <span className="inline-flex items-center gap-2 rounded-full bg-green-50 px-3 py-1.5 text-sm font-semibold text-green-700">
-
-                              <span className="h-2 w-2 rounded-full bg-green-500" />
-
-                              Actif
-
-                            </span>
-
-                          </td>
-
-                        </tr>
-                      );
-                    }
-                  )}
-
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-
       </div>
-    </main>
+    </section>
   );
 }
