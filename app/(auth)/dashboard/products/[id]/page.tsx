@@ -26,7 +26,7 @@ import {
 } from "lucide-react";
 
 const API_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://paylink.coderise-solution.com/api";
+  process.env.NEXT_PUBLIC_API_URL || "https://paylink.coderise-solution.com/api";
 
 type ProductStatus =
   | "DRAFT"
@@ -173,7 +173,7 @@ export default function ProductDetailsPage() {
       }
 
       const response = await fetch(
-        `${API_URL}/products/${productId}`,
+        `${API_URL}/product/${productId}`,
         {
           method: "GET",
           headers: {
@@ -288,7 +288,7 @@ export default function ProductDetailsPage() {
       }
 
       const response = await fetch(
-        `${API_URL}/products/${productId}`,
+        `${API_URL}/product/${productId}`,
         {
           method: "PUT",
           headers: {
