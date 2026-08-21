@@ -3,7 +3,8 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { Package, Sparkles, CheckCircle, ChevronDown, ChevronUp } from "lucide-react";
-import { Product } from "./page"; // Ajustez l'import selon votre structure
+
+import { Product } from "@/app/store/page";// Ajustez l'import selon votre structure
 
 const typeLabels: Record<string, string> = {
   PHYSICAL: "Produit physique",
