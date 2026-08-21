@@ -27,7 +27,7 @@ import {
 
 const API_URL =
   process.env.NEXT_PUBLIC_API_URL ||
-  "http://paylink.coderise-solution.com/api";
+  "https://paylink.coderise-solution.com/api";
 
 /* =========================================================
    TYPES
