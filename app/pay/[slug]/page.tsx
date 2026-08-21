@@ -1,7 +1,9 @@
 "use client";
 
 import {
+  ChangeEvent,
   FormEvent,
+  useCallback,
   useEffect,
   useMemo,
   useState,
@@ -15,9 +17,11 @@ import {
   ArrowLeft,
   CheckCircle2,
   CreditCard,
+  FileText,
   Loader2,
   Phone,
   ShieldCheck,
+  Upload,
 } from "lucide-react";
 
 /* =========================================================
@@ -157,6 +161,14 @@ function getFieldType(type: string): ProductFieldType {
     : "TEXT";
 }
 
+function normalizePhone(value: string): string {
+  let cleaned = value.replace(/\D/g, "");
+  if (cleaned.startsWith("00")) cleaned = cleaned.substring(2);
+  if (cleaned.startsWith("0")) cleaned = "243" + cleaned.substring(1);
+  if (cleaned.length === 9) cleaned = "243" + cleaned;
+  return cleaned;
+}
+
 /* =========================================================
    COMPOSANT PRINCIPAL
 ========================================================= */
@@ -174,7 +186,9 @@ export default function PublicPaymentPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const [formValues, setFormValues] = useState<Record<string, string | boolean>>({});
+  const [formValues, setFormValues] = useState<
+    Record<string, string | boolean | File | null>
+  >({});
   const [telecom, setTelecom] = useState<Telecom | "">("");
   const [phone, setPhone] = useState("");
   const [paying, setPaying] = useState(false);
@@ -182,8 +196,12 @@ export default function PublicPaymentPage() {
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [transactionId, setTransactionId] = useState<string | null>(null);
   const [, setPaymentStatus] = useState<string | null>(null);
-  const [paymentCurrency, setPaymentCurrency] = useState<PaymentCurrency>("USD");
+  const [paymentCurrency, setPaymentCurrency] =
+    useState<PaymentCurrency>("USD");
 
+  /* ---------------------------------------------------------
+     CHARGEMENT DES DONNÉES DE LA PAGE
+  --------------------------------------------------------- */
   useEffect(() => {
     if (typeof slug !== "string" || !slug.trim()) {
       setLoading(false);
@@ -222,7 +240,8 @@ export default function PublicPaymentPage() {
             responseData !== null &&
             "message" in responseData
           ) {
-            const serverMessage = (responseData as { message?: unknown }).message;
+            const serverMessage = (responseData as { message?: unknown })
+              .message;
             if (typeof serverMessage === "string" && serverMessage.trim()) {
               message = serverMessage;
             }
@@ -262,7 +281,8 @@ export default function PublicPaymentPage() {
         setPaymentCurrency(product.currency === "CDF" ? "CDF" : "USD");
 
         const fields = Array.isArray(product.fields) ? product.fields : [];
-        const initialValues: Record<string, string | boolean> = {};
+        const initialValues: Record<string, string | boolean | File | null> =
+          {};
 
         fields.forEach((field) => {
           initialValues[field.name] =
@@ -288,6 +308,9 @@ export default function PublicPaymentPage() {
     };
   }, [slug]);
 
+  /* ---------------------------------------------------------
+     DONNÉES CALCULÉES
+  --------------------------------------------------------- */
   const product = data?.products?.[0] ?? null;
   const productFields = Array.isArray(product?.fields) ? product.fields : [];
   const originalPrice = Number(product?.price ?? 0);
@@ -307,11 +330,17 @@ export default function PublicPaymentPage() {
 
   const paymentPriceDisplay = formatPrice(paymentAmount, paymentCurrency);
 
-  function updateField(fieldName: string, value: string | boolean) {
-    setFormValues((prev) => ({ ...prev, [fieldName]: value }));
-  }
+  /* ---------------------------------------------------------
+     GESTION DES FORMULAIRES ET MATIONS
+  --------------------------------------------------------- */
+  const updateField = useCallback(
+    (fieldName: string, value: string | boolean | File | null) => {
+      setFormValues((prev) => ({ ...prev, [fieldName]: value }));
+    },
+    []
+  );
 
-  function validateFields(): string | null {
+  const validateFields = useCallback(() => {
     for (const field of productFields) {
       if (!field.required) continue;
       const value = formValues[field.name];
@@ -325,21 +354,13 @@ export default function PublicPaymentPage() {
       }
     }
     return null;
-  }
-
-  function normalizePhone(value: string): string {
-    let cleaned = value.replace(/\D/g, "");
-    if (cleaned.startsWith("00")) cleaned = cleaned.substring(2);
-    if (cleaned.startsWith("0")) cleaned = "243" + cleaned.substring(1);
-    if (cleaned.length === 9) cleaned = "243" + cleaned;
-    return cleaned;
-  }
+  }, [productFields, formValues]);
 
   async function handlePayment(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (!product) {
-      setPaymentMessage("Produit introuvable.");
+    if (!product || !data?.paymentPage) {
+      setPaymentMessage("Produit ou page de paiement introuvable.");
       return;
     }
 
@@ -375,17 +396,30 @@ export default function PublicPaymentPage() {
     try {
       setPaying(true);
 
+      // Traitement des champs custom (transformation des objets File en simples noms de fichiers si nécessaire)
+      const sanitizedCustomFields: Record<string, unknown> = {};
+      Object.entries(formValues).forEach(([key, val]) => {
+        if (val instanceof File) {
+          sanitizedCustomFields[key] = val.name;
+        } else {
+          sanitizedCustomFields[key] = val;
+        }
+      });
+
       const payload = {
+        paymentPageId: data.paymentPage.id,
+        productId: product.id,
         amount: Number(paymentAmount.toFixed(2)),
         currency: paymentCurrency,
         phone: normalizedPhone,
         telecom,
-        customFields: formValues,
+        customFields: sanitizedCustomFields,
       };
 
       const response = await fetch(`${API_URL}/payment/initiate`, {
         method: "POST",
         headers: {
+          "Content-[#Content-Type": "application/json",
           "Content-Type": "application/json",
           Accept: "application/json",
         },
@@ -409,8 +443,7 @@ export default function PublicPaymentPage() {
 
       const newTransactionId =
         result.data?.transactionId || result.transactionId || null;
-      const newStatus =
-        result.data?.status || result.status || "pending";
+      const newStatus = result.data?.status || result.status || "pending";
 
       setTransactionId(newTransactionId);
       setPaymentStatus(newStatus);
@@ -435,6 +468,9 @@ export default function PublicPaymentPage() {
     }
   }
 
+  /* ---------------------------------------------------------
+     RENDU CHARGEMENT ET ERREURS
+  --------------------------------------------------------- */
   if (loading) {
     return (
       <main className="min-h-screen bg-slate-50 px-4 py-12 flex items-center justify-center">
@@ -451,7 +487,9 @@ export default function PublicPaymentPage() {
       <main className="min-h-screen bg-slate-50 px-4 py-12 flex items-center justify-center">
         <div className="w-full max-w-xl rounded-3xl bg-white p-8 text-center shadow-sm">
           <AlertCircle size={48} className="mx-auto text-red-500" />
-          <h1 className="mt-5 text-2xl font-bold text-slate-900">Page indisponible</h1>
+          <h1 className="mt-5 text-2xl font-bold text-slate-900">
+            Page indisponible
+          </h1>
           <p className="mt-3 text-slate-500">
             {error || "Cette page de paiement est indisponible."}
           </p>
@@ -468,6 +506,9 @@ export default function PublicPaymentPage() {
     );
   }
 
+  /* ---------------------------------------------------------
+     RENDU INTERFACE PRINCIPALE
+  --------------------------------------------------------- */
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-8 md:px-6 md:py-12">
       <div className="mx-auto max-w-5xl">
@@ -560,7 +601,8 @@ export default function PublicPaymentPage() {
               <div className="mb-6">
                 <h2 className="text-lg font-bold text-[#08192D]">Paiement</h2>
                 <p className="mt-0.5 text-xs text-slate-500">
-                  Remplissez les informations nécessaires pour effectuer votre paiement.
+                  Remplissez les informations nécessaires pour effectuer votre
+                  paiement.
                 </p>
               </div>
 
@@ -581,7 +623,9 @@ export default function PublicPaymentPage() {
                             type="checkbox"
                             id={`field-${field.id}`}
                             checked={Boolean(formValues[field.name])}
-                            onChange={(e) => updateField(field.name, e.target.checked)}
+                            onChange={(e) =>
+                              updateField(field.name, e.target.checked)
+                            }
                             className="h-4 w-4 rounded border-slate-300 text-[#08192D] focus:ring-[#08192D]"
                           />
                           <label
@@ -589,7 +633,9 @@ export default function PublicPaymentPage() {
                             className="text-xs font-medium text-slate-700"
                           >
                             {field.label}{" "}
-                            {field.required && <span className="text-red-500">*</span>}
+                            {field.required && (
+                              <span className="text-red-500">*</span>
+                            )}
                           </label>
                         </div>
                       );
@@ -600,11 +646,15 @@ export default function PublicPaymentPage() {
                         <div key={field.id}>
                           <label className="block text-xs font-medium text-slate-700">
                             {field.label}{" "}
-                            {field.required && <span className="text-red-500">*</span>}
+                            {field.required && (
+                              <span className="text-red-500">*</span>
+                            )}
                           </label>
                           <textarea
                             value={String(formValues[field.name] || "")}
-                            onChange={(e) => updateField(field.name, e.target.value)}
+                            onChange={(e) =>
+                              updateField(field.name, e.target.value)
+                            }
                             required={field.required}
                             rows={3}
                             className="mt-1 w-full rounded-xl border border-slate-200 px-3.5 py-2 text-sm text-slate-900 focus:border-[#08192D] focus:outline-none focus:ring-1 focus:ring-[#08192D]"
@@ -618,11 +668,15 @@ export default function PublicPaymentPage() {
                         <div key={field.id}>
                           <label className="block text-xs font-medium text-slate-700">
                             {field.label}{" "}
-                            {field.required && <span className="text-red-500">*</span>}
+                            {field.required && (
+                              <span className="text-red-500">*</span>
+                            )}
                           </label>
                           <select
                             value={String(formValues[field.name] || "")}
-                            onChange={(e) => updateField(field.name, e.target.value)}
+                            onChange={(e) =>
+                              updateField(field.name, e.target.value)
+                            }
                             required={field.required}
                             className="mt-1 w-full rounded-xl border border-slate-200 px-3.5 py-2 text-sm text-slate-900 focus:border-[#08192D] focus:outline-none focus:ring-1 focus:ring-[#08192D]"
                           >
@@ -637,11 +691,68 @@ export default function PublicPaymentPage() {
                       );
                     }
 
+                    if (fType === "IMAGE" || fType === "FILE") {
+                      const currentFile = formValues[field.name];
+                      const fileName =
+                        currentFile instanceof File
+                          ? currentFile.name
+                          : typeof currentFile === "string"
+                          ? currentFile
+                          : null;
+
+                      return (
+                        <div key={field.id}>
+                          <label className="block text-xs font-medium text-slate-700 mb-1">
+                            {field.label}{" "}
+                            {field.required && (
+                              <span className="text-red-500">*</span>
+                            )}
+                          </label>
+                          <div className="relative flex items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-50/50 p-4 transition hover:bg-slate-50">
+                            <input
+                              type="file"
+                              id={`field-${field.id}`}
+                              accept={
+                                fType === "IMAGE" ? "image/*" : undefined
+                              }
+                              onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                                const file = e.target.files?.[0] || null;
+                                updateField(field.name, file);
+                              }}
+                              required={field.required && !fileName}
+                              className="absolute inset-0 cursor-pointer opacity-0"
+                            />
+                            <div className="text-center">
+                              {fileName ? (
+                                <div className="flex items-center justify-center gap-2 text-xs font-medium text-[#08192D]">
+                                  <FileText size={16} />
+                                  <span className="truncate max-w-[200px]">
+                                    {fileName}
+                                  </span>
+                                </div>
+                              ) : (
+                                <div className="flex flex-col items-center justify-center text-slate-400 gap-1">
+                                  <Upload size={18} />
+                                  <span className="text-xs">
+                                    {fType === "IMAGE"
+                                      ? "Téléverser une image"
+                                      : "Choisir un fichier"}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    }
+
                     return (
                       <div key={field.id}>
                         <label className="block text-xs font-medium text-slate-700">
                           {field.label}{" "}
-                          {field.required && <span className="text-red-500">*</span>}
+                          {field.required && (
+                            <span className="text-red-500">*</span>
+                          )}
                         </label>
                         <input
                           type={
@@ -654,7 +765,9 @@ export default function PublicPaymentPage() {
                               : "text"
                           }
                           value={String(formValues[field.name] || "")}
-                          onChange={(e) => updateField(field.name, e.target.value)}
+                          onChange={(e) =>
+                            updateField(field.name, e.target.value)
+                          }
                           required={field.required}
                           className="mt-1 w-full rounded-xl border border-slate-200 px-3.5 py-2 text-sm text-slate-900 focus:border-[#08192D] focus:outline-none focus:ring-1 focus:ring-[#08192D]"
                         />
@@ -767,7 +880,10 @@ export default function PublicPaymentPage() {
                   }`}
                 >
                   {paymentSuccess ? (
-                    <CheckCircle2 size={18} className="shrink-0 text-green-600" />
+                    <CheckCircle2
+                      size={18}
+                      className="shrink-0 text-green-600"
+                    />
                   ) : (
                     <AlertCircle size={18} className="shrink-0 text-red-600" />
                   )}
