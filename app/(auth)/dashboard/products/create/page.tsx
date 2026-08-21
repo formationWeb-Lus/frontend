@@ -1197,84 +1197,72 @@ const response =
                 </div>
 
               </section>
+{/* =================================================
+    IMAGE
+================================================= */}
 
-              {/* =================================================
-                  IMAGE
-              ================================================= */}
+<section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
 
-              <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+  <div className="border-b border-slate-100 p-6">
 
-                <div className="border-b border-slate-100 p-6">
+    <div className="flex items-center gap-3">
 
-                  <div className="flex items-center gap-3">
+      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-50 text-purple-600">
+        <ImageIcon size={20} />
+      </div>
 
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-50 text-purple-600">
-                      <ImageIcon
-                        size={20}
-                      />
-                    </div>
+      <div>
+        <h2 className="font-bold text-slate-900">
+          Image du produit
+        </h2>
+        <p className="text-sm text-slate-500">
+          Téléchargez la couverture de votre livre.
+        </p>
+      </div>
 
-                    <div>
-
-                      <h2 className="font-bold text-slate-900">
-                        Image du produit
-                      </h2>
-
-                      <p className="text-sm text-slate-500">
-                        Ajoutez l'URL de l'image.
-                      </p>
-
-                    </div>
-
-                  </div>
-
-                </div>
-
-                <div className="p-6">
-
-                 <label className="mb-2 block text-sm font-semibold text-slate-700">
-  Image du produit
-</label>
-
-<input
-  type="file"
-  accept="image/*"
-  onChange={(event) => {
-    const file =
-      event.target.files?.[0];
-
-    if (!file) return;
-
-    setImageFile(file);
-
-    setImagePreview(
-      URL.createObjectURL(file)
-    );
-  }}
-  className="w-full rounded-xl border border-slate-200 px-4 py-3"
-/>
-
-                 {imagePreview && (
-  <div className="mt-5 overflow-hidden rounded-2xl border border-slate-200 bg-slate-100">
-
-    <img
-      src={imagePreview}
-      alt={
-        name ||
-        "Produit"
-      }
-      className="max-h-[400px] w-full object-cover"
-      onError={(event) => {
-        event.currentTarget.style.display = "none";
-      }}
-    />
+    </div>
 
   </div>
-)}
 
-                </div>
+  <div className="p-6">
 
-              </section>
+    <label className="mb-2 block text-sm font-semibold text-slate-700">
+      Image du produit
+    </label>
+
+    <input
+      type="file"
+      accept="image/*"
+      onChange={(event) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+
+        setImageFile(file);
+        setImagePreview(URL.createObjectURL(file));
+      }}
+      className="w-full rounded-xl border border-slate-200 px-4 py-3"
+    />
+
+    {imagePreview && (
+      /* Conteneur avec hauteur fixe (h-96) et centrage flex */
+      <div className="mt-5 flex h-96 w-full items-center justify-center overflow-hidden rounded-2xl border border-slate-200 bg-slate-900/5 p-4">
+
+        <img
+          src={imagePreview}
+          alt={name || "Couverture du livre"}
+          /* object-contain affiche l'image ENTIÈRE sans la rogner */
+          className="h-full max-h-full w-auto max-w-full rounded-lg object-contain shadow-md"
+          onError={(event) => {
+            event.currentTarget.style.display = "none";
+          }}
+        />
+
+      </div>
+    )}
+
+  </div>
+
+</section>
 
               {/* =================================================
                   STATUS
