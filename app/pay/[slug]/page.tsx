@@ -1,9 +1,7 @@
 "use client";
 
 import {
-  ChangeEvent,
   FormEvent,
-  useCallback,
   useEffect,
   useMemo,
   useState,
@@ -17,20 +15,23 @@ import {
   ArrowLeft,
   CheckCircle2,
   CreditCard,
-  FileText,
   Loader2,
+  Mail,
   Phone,
   ShieldCheck,
-  Upload,
 } from "lucide-react";
 
 /* =========================================================
-   CONFIGURATION API & CONSTANTES
+   CONFIGURATION API
 ========================================================= */
 
 const API_URL =
   process.env.NEXT_PUBLIC_API_URL ||
   "https://paylink.coderise-solution.com/api";
+
+/* =========================================================
+   TAUX USD / CDF
+========================================================= */
 
 const USD_TO_CDF_RATE = 2230;
 
@@ -39,6 +40,7 @@ const USD_TO_CDF_RATE = 2230;
 ========================================================= */
 
 type PaymentCurrency = "USD" | "CDF";
+
 type Telecom = "AM" | "OM" | "MP" | "AF";
 
 type ProductFieldType =
@@ -53,6 +55,10 @@ type ProductFieldType =
   | "FILE"
   | "BOOLEAN";
 
+/* =========================================================
+   PRODUCT FIELD
+========================================================= */
+
 interface ProductField {
   id: number;
   name: string;
@@ -62,6 +68,10 @@ interface ProductField {
   required: boolean;
   options?: string[];
 }
+
+/* =========================================================
+   PRODUCT
+========================================================= */
 
 interface Product {
   id: number;
@@ -78,6 +88,10 @@ interface Product {
   fields?: ProductField[];
 }
 
+/* =========================================================
+   PAYMENT PAGE
+========================================================= */
+
 interface PaymentPage {
   id: number;
   title: string;
@@ -87,6 +101,10 @@ interface PaymentPage {
   createdAt?: string;
 }
 
+/* =========================================================
+   PUBLIC PAYMENT API RESPONSE
+========================================================= */
+
 interface PublicPaymentApiResponse {
   success: boolean;
   paymentPage: PaymentPage;
@@ -94,6 +112,10 @@ interface PublicPaymentApiResponse {
   products: Product[];
   message?: string;
 }
+
+/* =========================================================
+   PAYMENT API RESPONSE
+========================================================= */
 
 interface PaymentApiResponse {
   success?: boolean;
@@ -108,7 +130,7 @@ interface PaymentApiResponse {
 }
 
 /* =========================================================
-   FONCTIONS UTILITAIRES
+   FORMAT PRICE
 ========================================================= */
 
 function formatPrice(price: number, currency: string): string {
@@ -119,17 +141,29 @@ function formatPrice(price: number, currency: string): string {
   );
 }
 
+/* =========================================================
+   CONVERT TO USD
+========================================================= */
+
 function convertToUsd(amount: number, currency: string): number {
   if (currency === "USD") return amount;
   if (currency === "CDF") return amount / USD_TO_CDF_RATE;
   return amount;
 }
 
+/* =========================================================
+   CONVERT TO CDF
+========================================================= */
+
 function convertToCdf(amount: number, currency: string): number {
   if (currency === "CDF") return amount;
   if (currency === "USD") return amount * USD_TO_CDF_RATE;
   return amount;
 }
+
+/* =========================================================
+   PRODUCT TYPE FORMATTER
+========================================================= */
 
 function formatProductType(type: string): string {
   const types: Record<string, string> = {
@@ -140,8 +174,13 @@ function formatProductType(type: string): string {
     SCHOOL: "École",
     SUBSCRIPTION: "Abonnement",
   };
+
   return types[type] || type;
 }
+
+/* =========================================================
+   FIELD TYPE HELPER
+========================================================= */
 
 function getFieldType(type: string): ProductFieldType {
   const supported: ProductFieldType[] = [
@@ -156,25 +195,21 @@ function getFieldType(type: string): ProductFieldType {
     "FILE",
     "BOOLEAN",
   ];
-  return supported.includes(type as ProductFieldType)
-    ? (type as ProductFieldType)
-    : "TEXT";
-}
 
-function normalizePhone(value: string): string {
-  let cleaned = value.replace(/\D/g, "");
-  if (cleaned.startsWith("00")) cleaned = cleaned.substring(2);
-  if (cleaned.startsWith("0")) cleaned = "243" + cleaned.substring(1);
-  if (cleaned.length === 9) cleaned = "243" + cleaned;
-  return cleaned;
+  if (supported.includes(type as ProductFieldType)) {
+    return type as ProductFieldType;
+  }
+
+  return "TEXT";
 }
 
 /* =========================================================
-   COMPOSANT PRINCIPAL
+   COMPONENT
 ========================================================= */
 
 export default function PublicPaymentPage() {
   const params = useParams();
+
   const rawSlug = params?.slug;
   const slug: string | undefined = Array.isArray(rawSlug)
     ? rawSlug[0]
@@ -182,26 +217,31 @@ export default function PublicPaymentPage() {
     ? rawSlug
     : undefined;
 
+  /* =======================================================
+     STATES
+  ======================================================= */
+
   const [data, setData] = useState<PublicPaymentApiResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const [formValues, setFormValues] = useState<
-    Record<string, string | boolean | File | null>
+    Record<string, string | boolean>
   >({});
+
   const [telecom, setTelecom] = useState<Telecom | "">("");
   const [phone, setPhone] = useState("");
   const [paying, setPaying] = useState(false);
   const [paymentMessage, setPaymentMessage] = useState<string | null>(null);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [transactionId, setTransactionId] = useState<string | null>(null);
-  const [, setPaymentStatus] = useState<string | null>(null);
-  const [paymentCurrency, setPaymentCurrency] =
-    useState<PaymentCurrency>("USD");
+  const [paymentStatus, setPaymentStatus] = useState<string | null>(null);
+  const [paymentCurrency, setPaymentCurrency] = useState<PaymentCurrency>("USD");
 
-  /* ---------------------------------------------------------
-     CHARGEMENT DES DONNÉES DE LA PAGE
-  --------------------------------------------------------- */
+  /* =======================================================
+     CHARGEMENT PAGE PUBLIQUE
+  ======================================================= */
+
   useEffect(() => {
     if (typeof slug !== "string" || !slug.trim()) {
       setLoading(false);
@@ -217,14 +257,14 @@ export default function PublicPaymentPage() {
         setLoading(true);
         setError(null);
 
-        const response = await fetch(
-          `${API_URL}/public/payment-pages/${encodeURIComponent(currentSlug)}`,
-          {
-            method: "GET",
-            cache: "no-store",
-            headers: { Accept: "application/json" },
-          }
-        );
+        const encodedSlug = encodeURIComponent(currentSlug);
+        const url = `${API_URL}/public/payment-pages/${encodedSlug}`;
+
+        const response = await fetch(url, {
+          method: "GET",
+          cache: "no-store",
+          headers: { Accept: "application/json" },
+        });
 
         let responseData: unknown = null;
         try {
@@ -240,8 +280,7 @@ export default function PublicPaymentPage() {
             responseData !== null &&
             "message" in responseData
           ) {
-            const serverMessage = (responseData as { message?: unknown })
-              .message;
+            const serverMessage = (responseData as { message?: unknown }).message;
             if (typeof serverMessage === "string" && serverMessage.trim()) {
               message = serverMessage;
             }
@@ -278,15 +317,22 @@ export default function PublicPaymentPage() {
         if (cancelled) return;
 
         setData(apiData);
-        setPaymentCurrency(product.currency === "CDF" ? "CDF" : "USD");
+
+        if (product.currency === "CDF") {
+          setPaymentCurrency("CDF");
+        } else {
+          setPaymentCurrency("USD");
+        }
 
         const fields = Array.isArray(product.fields) ? product.fields : [];
-        const initialValues: Record<string, string | boolean | File | null> =
-          {};
+        const initialValues: Record<string, string | boolean> = {};
 
         fields.forEach((field) => {
-          initialValues[field.name] =
-            field.type === "BOOLEAN" ? false : field.value || "";
+          if (field.type === "BOOLEAN") {
+            initialValues[field.name] = false;
+          } else {
+            initialValues[field.name] = field.value || "";
+          }
         });
 
         setFormValues(initialValues);
@@ -298,19 +344,23 @@ export default function PublicPaymentPage() {
             : "Impossible de charger cette page."
         );
       } finally {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
     }
 
     loadPage();
+
     return () => {
       cancelled = true;
     };
   }, [slug]);
 
-  /* ---------------------------------------------------------
-     DONNÉES CALCULÉES
-  --------------------------------------------------------- */
+  /* =======================================================
+     PRODUCT CALCULATIONS
+  ======================================================= */
+
   const product = data?.products?.[0] ?? null;
   const productFields = Array.isArray(product?.fields) ? product.fields : [];
   const originalPrice = Number(product?.price ?? 0);
@@ -319,9 +369,10 @@ export default function PublicPaymentPage() {
   const paymentAmount = useMemo(() => {
     if (!product) return 0;
     if (paymentCurrency === originalCurrency) return originalPrice;
-    return paymentCurrency === "CDF"
-      ? convertToCdf(originalPrice, originalCurrency)
-      : convertToUsd(originalPrice, originalCurrency);
+    if (paymentCurrency === "CDF") {
+      return convertToCdf(originalPrice, originalCurrency);
+    }
+    return convertToUsd(originalPrice, originalCurrency);
   }, [product, originalPrice, originalCurrency, paymentCurrency]);
 
   const originalPriceDisplay = product
@@ -330,17 +381,18 @@ export default function PublicPaymentPage() {
 
   const paymentPriceDisplay = formatPrice(paymentAmount, paymentCurrency);
 
-  /* ---------------------------------------------------------
-     GESTION DES FORMULAIRES ET MATIONS
-  --------------------------------------------------------- */
-  const updateField = useCallback(
-    (fieldName: string, value: string | boolean | File | null) => {
-      setFormValues((prev) => ({ ...prev, [fieldName]: value }));
-    },
-    []
-  );
+  /* =======================================================
+     HELPERS & FORM HANDLERS
+  ======================================================= */
 
-  const validateFields = useCallback(() => {
+  function updateField(fieldName: string, value: string | boolean) {
+    setFormValues((previous) => ({
+      ...previous,
+      [fieldName]: value,
+    }));
+  }
+
+  function validateFields(): string | null {
     for (const field of productFields) {
       if (!field.required) continue;
       const value = formValues[field.name];
@@ -354,13 +406,21 @@ export default function PublicPaymentPage() {
       }
     }
     return null;
-  }, [productFields, formValues]);
+  }
+
+  function normalizePhone(value: string): string {
+    let cleaned = value.replace(/\D/g, "");
+    if (cleaned.startsWith("00")) cleaned = cleaned.substring(2);
+    if (cleaned.startsWith("0")) cleaned = "243" + cleaned.substring(1);
+    if (cleaned.length === 9) cleaned = "243" + cleaned;
+    return cleaned;
+  }
 
   async function handlePayment(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (!product || !data?.paymentPage) {
-      setPaymentMessage("Produit ou page de paiement introuvable.");
+    if (!product) {
+      setPaymentMessage("Produit introuvable.");
       return;
     }
 
@@ -396,30 +456,17 @@ export default function PublicPaymentPage() {
     try {
       setPaying(true);
 
-      // Traitement des champs custom (transformation des objets File en simples noms de fichiers si nécessaire)
-      const sanitizedCustomFields: Record<string, unknown> = {};
-      Object.entries(formValues).forEach(([key, val]) => {
-        if (val instanceof File) {
-          sanitizedCustomFields[key] = val.name;
-        } else {
-          sanitizedCustomFields[key] = val;
-        }
-      });
-
       const payload = {
-        paymentPageId: data.paymentPage.id,
-        productId: product.id,
         amount: Number(paymentAmount.toFixed(2)),
         currency: paymentCurrency,
         phone: normalizedPhone,
         telecom,
-        customFields: sanitizedCustomFields,
+        customFields: formValues,
       };
 
       const response = await fetch(`${API_URL}/payment/initiate`, {
         method: "POST",
         headers: {
-          "Content-[#Content-Type": "application/json",
           "Content-Type": "application/json",
           Accept: "application/json",
         },
@@ -433,7 +480,7 @@ export default function PublicPaymentPage() {
         result = null;
       }
 
-      if (!response.ok || !result || result.success !== true) {
+      if (!response.ok) {
         throw new Error(
           result?.message ||
             result?.data?.message ||
@@ -441,105 +488,137 @@ export default function PublicPaymentPage() {
         );
       }
 
+      if (!result || result.success !== true) {
+        throw new Error(
+          result?.message ||
+            result?.data?.message ||
+            "Le paiement n'a pas pu être initialisé."
+        );
+      }
+
       const newTransactionId =
         result.data?.transactionId || result.transactionId || null;
-      const newStatus = result.data?.status || result.status || "pending";
+      const newStatus =
+        result.data?.status || result.status || "pending";
 
       setTransactionId(newTransactionId);
       setPaymentStatus(newStatus);
 
       const apiMessage = result.data?.message || result.message || "";
 
-      setPaymentSuccess(true);
-      setPaymentMessage(
+      if (
         newStatus.toLowerCase() === "pending" ||
-          apiMessage.toLowerCase().includes("insert pin")
-          ? apiMessage ||
-              "Transaction envoyée. Veuillez confirmer le paiement sur votre téléphone (PIN)."
-          : apiMessage || "Paiement initialisé avec succès."
-      );
-    } catch (err: unknown) {
+        apiMessage.toLowerCase().includes("insert pin")
+      ) {
+        setPaymentSuccess(true);
+        setPaymentMessage(
+          apiMessage ||
+            "Transaction envoyée. Veuillez confirmer le paiement sur votre téléphone (PIN)."
+        );
+        return;
+      }
+
+      setPaymentSuccess(true);
+      setPaymentMessage(apiMessage || "Paiement initialisé avec succès.");
+    } catch (error: unknown) {
       setPaymentSuccess(false);
       setPaymentMessage(
-        err instanceof Error ? err.message : "Erreur pendant le paiement."
+        error instanceof Error
+          ? error.message
+          : "Erreur pendant le paiement."
       );
     } finally {
       setPaying(false);
     }
   }
 
-  /* ---------------------------------------------------------
-     RENDU CHARGEMENT ET ERREURS
-  --------------------------------------------------------- */
+  /* =======================================================
+     RENDU : LOADING
+  ======================================================= */
+
   if (loading) {
     return (
-      <main className="min-h-screen bg-slate-50 px-4 py-12 flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 size={42} className="mx-auto animate-spin text-[#08192D]" />
-          <p className="mt-4 text-slate-500">Chargement de la page de paiement...</p>
+      <main className="min-h-screen bg-slate-50 px-4 py-12">
+        <div className="mx-auto flex max-w-6xl items-center justify-center">
+          <div className="text-center">
+            <Loader2
+              size={42}
+              className="mx-auto animate-spin text-[#08192D]"
+            />
+            <p className="mt-4 text-slate-500">
+              Chargement de la page de paiement...
+            </p>
+          </div>
         </div>
       </main>
     );
   }
+
+  /* =======================================================
+     RENDU : ERROR
+  ======================================================= */
 
   if (error || !data || !product) {
     return (
-      <main className="min-h-screen bg-slate-50 px-4 py-12 flex items-center justify-center">
-        <div className="w-full max-w-xl rounded-3xl bg-white p-8 text-center shadow-sm">
-          <AlertCircle size={48} className="mx-auto text-red-500" />
-          <h1 className="mt-5 text-2xl font-bold text-slate-900">
-            Page indisponible
-          </h1>
-          <p className="mt-3 text-slate-500">
-            {error || "Cette page de paiement est indisponible."}
-          </p>
-          <button
-            type="button"
-            onClick={() => window.history.back()}
-            className="mt-6 inline-flex items-center rounded-xl bg-[#08192D] px-5 py-3 font-semibold text-white transition hover:bg-[#102b48]"
-          >
-            <ArrowLeft size={18} className="mr-2" />
-            Retour
-          </button>
+      <main className="min-h-screen bg-slate-50 px-4 py-12">
+        <div className="mx-auto flex max-w-xl items-center justify-center">
+          <div className="w-full rounded-3xl bg-white p-8 text-center shadow-sm">
+            <AlertCircle size={48} className="mx-auto text-red-500" />
+            <h1 className="mt-5 text-2xl font-bold text-slate-900">
+              Page indisponible
+            </h1>
+            <p className="mt-3 text-slate-500">
+              {error || "Cette page de paiement est indisponible."}
+            </p>
+            <button
+              type="button"
+              onClick={() => window.history.back()}
+              className="mt-6 inline-flex items-center rounded-xl bg-[#08192D] px-5 py-3 font-semibold text-white transition hover:bg-[#102b48]"
+            >
+              <ArrowLeft size={18} className="mr-2" />
+              Retour
+            </button>
+          </div>
         </div>
       </main>
     );
   }
 
-  /* ---------------------------------------------------------
-     RENDU INTERFACE PRINCIPALE
-  --------------------------------------------------------- */
+  /* =======================================================
+     RENDU : PAGE PRINCIPALE
+  ======================================================= */
+
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-8 md:px-6 md:py-12">
-      <div className="mx-auto max-w-5xl">
+      <div className="mx-auto max-w-7xl">
         {/* HEADER */}
         <div className="mb-8 text-center">
-          <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+          <p className="text-sm font-semibold uppercase tracking-wider text-slate-500">
             Page de paiement
           </p>
-          <h1 className="mt-1 text-2xl font-bold text-[#08192D] md:text-3xl">
+          <h1 className="mt-2 text-3xl font-bold text-[#08192D] md:text-4xl">
             {data.paymentPage.title}
           </h1>
           {data.paymentPage.description && (
-            <p className="mx-auto mt-2 max-w-xl text-sm text-slate-500">
+            <p className="mx-auto mt-3 max-w-2xl text-slate-500">
               {data.paymentPage.description}
             </p>
           )}
         </div>
 
-        <div className="grid gap-8 lg:grid-cols-[1fr_380px] items-start">
+        <div className="grid gap-8 lg:grid-cols-[1fr_420px]">
           {/* SECTION PRODUIT */}
-          <section className="overflow-hidden rounded-3xl bg-white shadow-sm border border-slate-100">
+          <section className="overflow-hidden rounded-3xl bg-white shadow-sm">
             {product.imageUrl ? (
-              <div className="relative aspect-[4/3] w-full overflow-hidden bg-slate-50 flex items-center justify-center p-4">
+              <div className="relative aspect-video w-full overflow-hidden bg-slate-100">
                 <Image
                   src={product.imageUrl}
                   alt={product.name}
                   fill
                   priority
                   unoptimized
-                  className="object-contain"
-                  sizes="(max-width: 1024px) 100vw, 50vw"
+                  className="object-cover"
+                  sizes="(max-width: 1024px) 100vw, 60vw"
                 />
               </div>
             ) : (
@@ -563,53 +642,53 @@ export default function PublicPaymentPage() {
                 )}
               </div>
 
-              <h2 className="text-xl font-bold text-slate-900 md:text-2xl">
+              <h2 className="text-2xl font-bold text-slate-900 md:text-3xl">
                 {product.name}
               </h2>
 
               {product.subtitle && (
-                <p className="mt-1 text-sm font-medium text-slate-500">
+                <p className="mt-2 text-base font-medium text-slate-500">
                   {product.subtitle}
                 </p>
               )}
 
               {product.description && (
-                <div className="mt-4">
-                  <p className="whitespace-pre-line text-sm leading-relaxed text-slate-600">
+                <div className="mt-5">
+                  <p className="whitespace-pre-line leading-7 text-slate-600">
                     {product.description}
                   </p>
                 </div>
               )}
 
-              <div className="mt-6 rounded-2xl bg-slate-50 p-4 flex items-center justify-between">
+              <div className="mt-7 rounded-2xl bg-slate-50 p-5">
                 <p className="text-sm font-medium text-slate-500">
                   Prix du produit
                 </p>
-                <p className="text-2xl font-bold text-[#08192D]">
+                <p className="mt-1 text-3xl font-bold text-[#08192D]">
                   {originalPriceDisplay}
                 </p>
               </div>
             </div>
           </section>
 
-          {/* SECTION FORMULAIRE DE PAIEMENT */}
+          {/* SECTION FORMULAIRE PAIEMENT */}
           <section>
             <form
               onSubmit={handlePayment}
-              className="rounded-3xl bg-white p-6 shadow-sm border border-slate-100 md:p-7"
+              className="rounded-3xl bg-white p-6 shadow-sm md:p-7"
             >
-              <div className="mb-6">
-                <h2 className="text-lg font-bold text-[#08192D]">Paiement</h2>
-                <p className="mt-0.5 text-xs text-slate-500">
+              <div className="mb-7">
+                <h2 className="text-xl font-bold text-[#08192D]">Paiement</h2>
+                <p className="mt-1 text-sm text-slate-500">
                   Remplissez les informations nécessaires pour effectuer votre
                   paiement.
                 </p>
               </div>
 
-              {/* CHAMPS DYNAMIQUES */}
+              {/* CHAMPS DYNAMIQUES DU PRODUIT */}
               {productFields.length > 0 && (
                 <div className="mb-6 space-y-4 border-b border-slate-100 pb-6">
-                  <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                  <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-500">
                     Informations requises
                   </h3>
 
@@ -630,7 +709,7 @@ export default function PublicPaymentPage() {
                           />
                           <label
                             htmlFor={`field-${field.id}`}
-                            className="text-xs font-medium text-slate-700"
+                            className="text-sm font-medium text-slate-700"
                           >
                             {field.label}{" "}
                             {field.required && (
@@ -644,7 +723,7 @@ export default function PublicPaymentPage() {
                     if (fType === "TEXTAREA") {
                       return (
                         <div key={field.id}>
-                          <label className="block text-xs font-medium text-slate-700">
+                          <label className="block text-sm font-medium text-slate-700">
                             {field.label}{" "}
                             {field.required && (
                               <span className="text-red-500">*</span>
@@ -657,7 +736,7 @@ export default function PublicPaymentPage() {
                             }
                             required={field.required}
                             rows={3}
-                            className="mt-1 w-full rounded-xl border border-slate-200 px-3.5 py-2 text-sm text-slate-900 focus:border-[#08192D] focus:outline-none focus:ring-1 focus:ring-[#08192D]"
+                            className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm text-slate-900 focus:border-[#08192D] focus:outline-none focus:ring-1 focus:ring-[#08192D]"
                           />
                         </div>
                       );
@@ -666,7 +745,7 @@ export default function PublicPaymentPage() {
                     if (fType === "SELECT" && field.options) {
                       return (
                         <div key={field.id}>
-                          <label className="block text-xs font-medium text-slate-700">
+                          <label className="block text-sm font-medium text-slate-700">
                             {field.label}{" "}
                             {field.required && (
                               <span className="text-red-500">*</span>
@@ -678,7 +757,7 @@ export default function PublicPaymentPage() {
                               updateField(field.name, e.target.value)
                             }
                             required={field.required}
-                            className="mt-1 w-full rounded-xl border border-slate-200 px-3.5 py-2 text-sm text-slate-900 focus:border-[#08192D] focus:outline-none focus:ring-1 focus:ring-[#08192D]"
+                            className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm text-slate-900 focus:border-[#08192D] focus:outline-none focus:ring-1 focus:ring-[#08192D]"
                           >
                             <option value="">Sélectionnez...</option>
                             {field.options.map((opt) => (
@@ -691,64 +770,9 @@ export default function PublicPaymentPage() {
                       );
                     }
 
-                    if (fType === "IMAGE" || fType === "FILE") {
-                      const currentFile = formValues[field.name];
-                      const fileName =
-                        currentFile instanceof File
-                          ? currentFile.name
-                          : typeof currentFile === "string"
-                          ? currentFile
-                          : null;
-
-                      return (
-                        <div key={field.id}>
-                          <label className="block text-xs font-medium text-slate-700 mb-1">
-                            {field.label}{" "}
-                            {field.required && (
-                              <span className="text-red-500">*</span>
-                            )}
-                          </label>
-                          <div className="relative flex items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-50/50 p-4 transition hover:bg-slate-50">
-                            <input
-                              type="file"
-                              id={`field-${field.id}`}
-                              accept={
-                                fType === "IMAGE" ? "image/*" : undefined
-                              }
-                              onChange={(e: ChangeEvent<HTMLInputElement>) => {
-                                const file = e.target.files?.[0] || null;
-                                updateField(field.name, file);
-                              }}
-                              required={field.required && !fileName}
-                              className="absolute inset-0 cursor-pointer opacity-0"
-                            />
-                            <div className="text-center">
-                              {fileName ? (
-                                <div className="flex items-center justify-center gap-2 text-xs font-medium text-[#08192D]">
-                                  <FileText size={16} />
-                                  <span className="truncate max-w-[200px]">
-                                    {fileName}
-                                  </span>
-                                </div>
-                              ) : (
-                                <div className="flex flex-col items-center justify-center text-slate-400 gap-1">
-                                  <Upload size={18} />
-                                  <span className="text-xs">
-                                    {fType === "IMAGE"
-                                      ? "Téléverser une image"
-                                      : "Choisir un fichier"}
-                                  </span>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    }
-
                     return (
                       <div key={field.id}>
-                        <label className="block text-xs font-medium text-slate-700">
+                        <label className="block text-sm font-medium text-slate-700">
                           {field.label}{" "}
                           {field.required && (
                             <span className="text-red-500">*</span>
@@ -769,7 +793,7 @@ export default function PublicPaymentPage() {
                             updateField(field.name, e.target.value)
                           }
                           required={field.required}
-                          className="mt-1 w-full rounded-xl border border-slate-200 px-3.5 py-2 text-sm text-slate-900 focus:border-[#08192D] focus:outline-none focus:ring-1 focus:ring-[#08192D]"
+                          className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm text-slate-900 focus:border-[#08192D] focus:outline-none focus:ring-1 focus:ring-[#08192D]"
                         />
                       </div>
                     );
@@ -777,16 +801,16 @@ export default function PublicPaymentPage() {
                 </div>
               )}
 
-              {/* DEVISE */}
-              <div className="mb-5">
-                <label className="block text-xs font-medium text-slate-700">
+              {/* CHOIX DE LA DEVISE DE PAIEMENT */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-slate-700">
                   Devise de règlement
                 </label>
-                <div className="mt-1.5 grid grid-cols-2 gap-2">
+                <div className="mt-2 grid grid-cols-2 gap-3">
                   <button
                     type="button"
                     onClick={() => setPaymentCurrency("USD")}
-                    className={`rounded-xl border py-2.5 text-center text-xs font-semibold transition ${
+                    className={`rounded-xl border p-3 text-center text-sm font-semibold transition ${
                       paymentCurrency === "USD"
                         ? "border-[#08192D] bg-[#08192D] text-white"
                         : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
@@ -797,7 +821,7 @@ export default function PublicPaymentPage() {
                   <button
                     type="button"
                     onClick={() => setPaymentCurrency("CDF")}
-                    className={`rounded-xl border py-2.5 text-center text-xs font-semibold transition ${
+                    className={`rounded-xl border p-3 text-center text-sm font-semibold transition ${
                       paymentCurrency === "CDF"
                         ? "border-[#08192D] bg-[#08192D] text-white"
                         : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
@@ -808,14 +832,14 @@ export default function PublicPaymentPage() {
                 </div>
               </div>
 
-              {/* OPERATEURS */}
-              <div className="mb-5">
-                <label className="block text-xs font-medium text-slate-700">
+              {/* OPÉRATEURS TELECOM */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-slate-700">
                   Moyen de paiement Mobile Money *
                 </label>
-                <div className="mt-1.5 grid grid-cols-2 gap-2">
+                <div className="mt-2 grid grid-cols-2 gap-3">
                   {[
-                    { id: "MP", name: "M-Pesa" },
+                    { id: "MP", name: "M-Pesa (Vodacom)" },
                     { id: "OM", name: "Orange Money" },
                     { id: "AM", name: "Airtel Money" },
                     { id: "AF", name: "AfriMoney" },
@@ -824,7 +848,7 @@ export default function PublicPaymentPage() {
                       key={item.id}
                       type="button"
                       onClick={() => setTelecom(item.id as Telecom)}
-                      className={`rounded-xl border py-2.5 px-3 text-left text-xs font-semibold transition ${
+                      className={`rounded-xl border p-3 text-left text-sm font-semibold transition ${
                         telecom === item.id
                           ? "border-[#08192D] bg-[#08192D] text-white"
                           : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
@@ -836,15 +860,15 @@ export default function PublicPaymentPage() {
                 </div>
               </div>
 
-              {/* NUMERO DE TELEPHONE */}
-              <div className="mb-5">
-                <label className="block text-xs font-medium text-slate-700">
+              {/* NUMÉRO DE TÉLÉPHONE */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-slate-700">
                   Numéro Mobile Money *
                 </label>
                 <div className="relative mt-1">
                   <Phone
                     className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-                    size={16}
+                    size={18}
                   />
                   <input
                     type="tel"
@@ -852,45 +876,42 @@ export default function PublicPaymentPage() {
                     onChange={(e) => setPhone(e.target.value)}
                     placeholder="243812345678"
                     required
-                    className="w-full rounded-xl border border-slate-200 py-2 pl-9 pr-3 text-sm text-slate-900 focus:border-[#08192D] focus:outline-none focus:ring-1 focus:ring-[#08192D]"
+                    className="w-full rounded-xl border border-slate-200 py-2.5 pl-10 pr-4 text-sm text-slate-900 focus:border-[#08192D] focus:outline-none focus:ring-1 focus:ring-[#08192D]"
                   />
                 </div>
-                <p className="mt-1 text-[11px] text-slate-400">
+                <p className="mt-1 text-xs text-slate-400">
                   Format : 243XXXXXXXXX ou 08XXXXXXXX
                 </p>
               </div>
 
-              {/* RECAPITULATIF */}
-              <div className="mb-5 rounded-xl bg-slate-50 p-3.5 border border-slate-100">
-                <div className="flex items-center justify-between text-xs">
+              {/* RÉCAPITULATIF DE PAIEMENT */}
+              <div className="mb-6 rounded-2xl bg-slate-50 p-4">
+                <div className="flex items-center justify-between text-sm">
                   <span className="text-slate-500">Montant à payer</span>
-                  <span className="text-base font-bold text-[#08192D]">
+                  <span className="font-bold text-[#08192D]">
                     {paymentPriceDisplay}
                   </span>
                 </div>
               </div>
 
-              {/* MESSAGES */}
+              {/* ALERTES ERREUR / SUCCÈS */}
               {paymentMessage && (
                 <div
-                  className={`mb-5 flex items-start gap-2.5 rounded-xl p-3.5 text-xs ${
+                  className={`mb-6 flex items-start gap-3 rounded-xl p-4 text-sm ${
                     paymentSuccess
                       ? "bg-green-50 text-green-800"
                       : "bg-red-50 text-red-800"
                   }`}
                 >
                   {paymentSuccess ? (
-                    <CheckCircle2
-                      size={18}
-                      className="shrink-0 text-green-600"
-                    />
+                    <CheckCircle2 size={20} className="shrink-0 text-green-600" />
                   ) : (
-                    <AlertCircle size={18} className="shrink-0 text-red-600" />
+                    <AlertCircle size={20} className="shrink-0 text-red-600" />
                   )}
                   <div>
                     <p className="font-medium">{paymentMessage}</p>
                     {transactionId && (
-                      <p className="mt-0.5 text-[11px] opacity-80">
+                      <p className="mt-1 text-xs opacity-80">
                         ID Transaction : {transactionId}
                       </p>
                     )}
@@ -898,15 +919,15 @@ export default function PublicPaymentPage() {
                 </div>
               )}
 
-              {/* BOUTON PAIEMENT */}
+              {/* BOUTON SOUMISSION */}
               <button
                 type="submit"
                 disabled={paying}
-                className="flex w-full items-center justify-center rounded-xl bg-[#08192D] py-3 text-sm font-semibold text-white transition hover:bg-[#102b48] disabled:opacity-50"
+                className="flex w-full items-center justify-center rounded-xl bg-[#08192D] py-3.5 text-center font-semibold text-white transition hover:bg-[#102b48] disabled:opacity-50"
               >
                 {paying ? (
                   <>
-                    <Loader2 size={16} className="mr-2 animate-spin" />
+                    <Loader2 size={18} className="mr-2 animate-spin" />
                     Traitement en cours...
                   </>
                 ) : (
@@ -914,8 +935,8 @@ export default function PublicPaymentPage() {
                 )}
               </button>
 
-              <div className="mt-3 flex items-center justify-center text-[11px] text-slate-400">
-                <ShieldCheck size={14} className="mr-1 text-green-600" />
+              <div className="mt-4 flex items-center justify-center text-xs text-slate-400">
+                <ShieldCheck size={16} className="mr-1 text-green-600" />
                 Paiement sécurisé crypté SSL
               </div>
             </form>
