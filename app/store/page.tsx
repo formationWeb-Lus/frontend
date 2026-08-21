@@ -65,7 +65,10 @@ export default function StorePage() {
       try {
         setLoading(true);
 
-        const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+        const token =
+          typeof window !== "undefined"
+            ? localStorage.getItem("token")
+            : null;
 
         const response = await fetch(`${API_URL}/my-store`, {
           method: "GET",
@@ -153,11 +156,11 @@ export default function StorePage() {
           <div className="animate-pulse space-y-6">
             <div className="h-10 w-72 rounded-xl bg-slate-200" />
             <div className="h-16 w-full rounded-2xl bg-slate-200" />
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              <div className="h-[420px] rounded-3xl bg-slate-200" />
-              <div className="h-[420px] rounded-3xl bg-slate-200" />
-              <div className="h-[420px] rounded-3xl bg-slate-200" />
-              <div className="h-[420px] rounded-3xl bg-slate-200" />
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 items-start">
+              <div className="h-[480px] rounded-3xl bg-slate-200" />
+              <div className="h-[480px] rounded-3xl bg-slate-200" />
+              <div className="h-[480px] rounded-3xl bg-slate-200" />
+              <div className="h-[480px] rounded-3xl bg-slate-200" />
             </div>
           </div>
         </div>
@@ -214,7 +217,7 @@ export default function StorePage() {
             }}
           />
         ) : (
-          <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 items-start">
             {filteredProducts.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}
