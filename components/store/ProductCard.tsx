@@ -1,267 +1,140 @@
-
 "use client";
 
-import Image from "next/image";
+import React, { useState } from "react";
 import Link from "next/link";
+import { Package, Sparkles, CheckCircle, ChevronDown, ChevronUp } from "lucide-react";
+import { Product } from "./page"; // Ajustez l'import selon votre structure
 
-import {
-  ArrowRight,
-  Check,
-  Copy,
-  Package,
-  Share2,
-  Sparkles,
-} from "lucide-react";
+const typeLabels: Record<string, string> = {
+  PHYSICAL: "Produit physique",
+  DIGITAL: "Produit numérique",
+  COURSE: "Formation",
+  SERVICE: "Service",
+  SCHOOL: "École",
+  SUBSCRIPTION: "Abonnement",
+};
 
-export interface ProductCardProduct {
-  id: number;
-
-  name: string;
-
-  subtitle?: string | null;
-
-  description?: string | null;
-
-  type: string;
-
-  price: number;
-
-  currency: string;
-
-  imageUrl?: string | null;
-
-  createdAt: string;
-
-  paymentPageProducts?: {
-    paymentPage: {
-      slug: string;
-    };
-  }[];
-}
-
-interface ProductCardProps {
-  product: ProductCardProduct;
-
-  onCopy?: (
-    productId: number,
-    url: string
-  ) => void;
-
-  copied?: boolean;
-}
-
-function formatPrice(
-  price: number,
-  currency: string
-) {
-  return (
-    price.toLocaleString("fr-FR", {
-      maximumFractionDigits: 2,
-    }) +
-    " " +
-    currency
-  );
-}
-
-function getProductType(type: string) {
-  const types: Record<string, string> = {
-    COURSE: "Formation",
-    SERVICE: "Service",
-    PHYSICAL: "Produit",
-    DIGITAL: "Produit numérique",
-    SCHOOL: "École",
-    SUBSCRIPTION: "Abonnement",
-  };
-
-  return types[type] || "Produit";
-}
-
-export default function ProductCard({
-  product,
-  onCopy,
-  copied = false,
-}: ProductCardProps) {
-  const slug =
-    product.paymentPageProducts?.[0]
-      ?.paymentPage.slug;
-
-  const paymentUrl = slug
-    ? `/pay/${slug}`
-    : null;
-
-  async function handleShare() {
-    if (!paymentUrl) return;
-
-    const fullUrl =
-      `${window.location.origin}${paymentUrl}`;
-
-    try {
-      if (
-        navigator.share
-      ) {
-        await navigator.share({
-          title: product.name,
-          text: `Découvrez ${product.name}`,
-          url: fullUrl,
-        });
-
-        return;
-      }
-
-      await navigator.clipboard.writeText(
-        fullUrl
-      );
-
-      onCopy?.(
-        product.id,
-        fullUrl
-      );
-    } catch {
-      // L'utilisateur peut simplement fermer
-      // la fenêtre de partage.
-    }
-  }
+export default function ProductCard({ product }: { product: Product }) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const paymentSlug = product.paymentPageProducts?.[0]?.paymentPage?.slug;
+  const href = paymentSlug ? `/pay/${paymentSlug}` : `#`;
 
   return (
-    <article className="group flex h-full flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:border-slate-300 hover:shadow-2xl">
-      <div className="relative h-64 overflow-hidden bg-slate-100">
-        {product.imageUrl ? (
-          <Image
-            src={product.imageUrl}
-            alt={product.name}
-            fill
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-            className="object-cover transition duration-500 group-hover:scale-105"
-          />
-        ) : (
-          <div className="flex h-full items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200">
-            <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-white shadow-sm">
-              <Package
-                size={38}
-                className="text-slate-300"
-              />
+    <div className="group flex flex-col justify-between overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
+      <div>
+        {/* =========================================================
+            1. IMAGE DU PRODUIT (Visuel 100% complet)
+        ========================================================= */}
+        <div className="relative h-80 w-full overflow-hidden bg-slate-900 p-2 flex items-center justify-center">
+          {product.imageUrl ? (
+            <img
+              src={product.imageUrl}
+              alt={product.name}
+              className="h-full w-full object-contain transition-transform duration-300 group-hover:scale-105"
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center text-slate-500">
+              <Package size={48} />
             </div>
+          )}
+
+          {/* Badge Type */}
+          <div className="absolute top-3 left-3 z-10">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/95 px-3 py-1 text-xs font-semibold text-slate-800 shadow-sm backdrop-blur-md">
+              <Sparkles size={12} className="text-amber-500" />
+              {typeLabels[product.type] || product.type}
+            </span>
           </div>
-        )}
 
-        <div className="absolute left-4 top-4">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-white/95 px-3 py-1.5 text-xs font-bold text-[#08192D] shadow-sm backdrop-blur">
-            <Sparkles size={13} />
-            {getProductType(product.type)}
-          </span>
+          {/* Badge Statut */}
+          <div className="absolute top-3 right-3 z-10">
+            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500 px-3 py-1 text-xs font-semibold text-white shadow-sm">
+              <CheckCircle size={12} />
+              Disponible
+            </span>
+          </div>
         </div>
 
-        <div className="absolute right-4 top-4">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-green-500 px-3 py-1.5 text-xs font-bold text-white shadow-sm">
-            <Check size={13} />
-            Disponible
-          </span>
-        </div>
-      </div>
-
-      <div className="flex flex-1 flex-col p-5 sm:p-6">
-        <div className="flex-1">
-          <h2 className="line-clamp-2 text-xl font-black leading-tight text-[#08192D]">
+        {/* =========================================================
+            2. TEXTES (100% visibles sans truncation)
+        ========================================================= */}
+        <div className="p-5">
+          {/* Titre sans coupure */}
+          <h2 className="font-bold text-slate-900 text-lg leading-snug group-hover:text-blue-600 transition-colors">
             {product.name}
           </h2>
 
+          {/* Sous-titre sans coupure */}
           {product.subtitle && (
-            <p className="mt-2 line-clamp-1 text-sm font-medium text-slate-500">
+            <p className="mt-2 text-xs font-semibold text-slate-500 leading-normal">
               {product.subtitle}
             </p>
           )}
 
-          <p className="mt-4 line-clamp-3 text-sm leading-6 text-slate-500">
-            {product.description ||
-              "Découvrez ce produit disponible sur ShopFlowPay."}
-          </p>
-        </div>
-
-        <div className="mt-6 border-t border-slate-100 pt-5">
-          <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-            Prix
-          </p>
-
-          <div className="mt-1 flex items-end justify-between gap-3">
-            <p className="text-2xl font-black text-[#08192D]">
-              {formatPrice(
-                product.price,
-                product.currency
-              )}
-            </p>
-
-            {paymentUrl && (
-              <button
-                type="button"
-                onClick={handleShare}
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 text-slate-500 transition hover:border-[#08192D] hover:bg-slate-50 hover:text-[#08192D]"
-                title="Partager"
+          {/* Description sans 'line-clamp' */}
+          {product.description && (
+            <div className="mt-3">
+              <p
+                className={`text-sm text-slate-600 leading-relaxed whitespace-pre-line ${
+                  !isExpanded && product.description.length > 150
+                    ? "line-clamp-3"
+                    : ""
+                }`}
               >
-                {copied ? (
-                  <Check size={18} />
-                ) : (
-                  <Share2 size={18} />
-                )}
-              </button>
-            )}
-          </div>
+                {product.description}
+              </p>
 
-          {paymentUrl ? (
-            <Link
-              href={paymentUrl}
-              className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-[#08192D] px-5 py-3.5 text-sm font-bold text-white shadow-sm transition hover:bg-[#102c4e] hover:shadow-lg"
-            >
-              Voir le produit
-
-              <ArrowRight
-                size={18}
-                className="transition group-hover:translate-x-1"
-              />
-            </Link>
-          ) : (
-            <button
-              type="button"
-              disabled
-              className="mt-5 flex w-full cursor-not-allowed items-center justify-center rounded-2xl bg-slate-200 px-5 py-3.5 text-sm font-bold text-slate-400"
-            >
-              Paiement indisponible
-            </button>
-          )}
-
-          {paymentUrl && (
-            <button
-              type="button"
-              onClick={() => {
-                const fullUrl =
-                  `${window.location.origin}${paymentUrl}`;
-
-                navigator.clipboard
-                  .writeText(fullUrl)
-                  .then(() => {
-                    onCopy?.(
-                      product.id,
-                      fullUrl
-                    );
-                  })
-                  .catch(() => {});
-              }}
-              className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl py-2 text-xs font-semibold text-slate-400 transition hover:bg-slate-50 hover:text-[#08192D]"
-            >
-              {copied ? (
-                <>
-                  <Check size={14} />
-                  Lien copié
-                </>
-              ) : (
-                <>
-                  <Copy size={14} />
-                  Copier le lien de paiement
-                </>
+              {/* Bouton Voir Plus / Voir Moins si la description est très longue */}
+              {product.description.length > 150 && (
+                <button
+                  onClick={() => setIsExpanded(!isExpanded)}
+                  className="mt-2 inline-flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-800 transition-colors"
+                >
+                  {isExpanded ? (
+                    <>
+                      Réduire <ChevronUp size={14} />
+                    </>
+                  ) : (
+                    <>
+                      Lire la suite complète <ChevronDown size={14} />
+                    </>
+                  )}
+                </button>
               )}
-            </button>
+            </div>
           )}
         </div>
       </div>
-    </article>
+
+      {/* =========================================================
+          3. PRIX ET BOUTON D'ACHAT
+      ========================================================= */}
+      <div className="p-5 pt-0">
+        <div className="my-4 border-t border-slate-100" />
+
+        <div className="flex items-end justify-between gap-2">
+          <div>
+            <span className="text-[10px] font-bold tracking-wider uppercase text-slate-400">
+              PRIX
+            </span>
+            <p className="text-xl font-black text-slate-900">
+              {Number(product.price).toLocaleString("fr-FR", {
+                minimumFractionDigits: 2,
+              })}{" "}
+              <span className="text-sm font-bold text-blue-600">
+                {product.currency}
+              </span>
+            </p>
+          </div>
+
+          <Link
+            href={href}
+            className="inline-flex items-center justify-center rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-bold text-white shadow-md shadow-blue-500/20 transition-all hover:bg-blue-700 hover:shadow-lg active:scale-95"
+          >
+            Acheter
+          </Link>
+        </div>
+      </div>
+    </div>
   );
 }
