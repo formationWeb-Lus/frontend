@@ -18,7 +18,7 @@ import {
 
 const API_URL =
   process.env.NEXT_PUBLIC_API_URL ||
-  "https://paylinks.coderise-solution.com/api";
+  "https://shop-flowpay-backend.vercel.app/api";
 
 interface Plan {
   id: number;
