@@ -18,7 +18,7 @@ import {
 
 const API_URL =
   process.env.NEXT_PUBLIC_API_URL ||
-  "https://shop-flowpay-backend.vercel.app/api";
+  "https://shopflowpay-backend-1.onrender.com/api";
 
 interface Plan {
   id: number;
