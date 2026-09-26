@@ -12,7 +12,6 @@ import {
   RefreshCw,
   Search,
   Filter,
-  CheckCircle2,
   ShieldCheck,
 } from "lucide-react";
 
@@ -140,6 +139,7 @@ export default function SubscribersPage() {
 
       const isActive = user.subscriptionStatus?.toUpperCase() === "ACTIVE";
 
+      // Prise en compte de tous les statuts non-actifs (FREE, EXPIRED, INACTIVE)
       if (statusFilter === "ACTIVE") return matchesSearch && isActive;
       if (statusFilter === "INACTIVE") return matchesSearch && !isActive;
 
@@ -276,7 +276,7 @@ export default function SubscribersPage() {
                     : "text-slate-400 hover:text-white"
                 }`}
               >
-                Inactifs
+                Inactifs / Gratuit
               </button>
             </div>
           </div>
@@ -289,7 +289,7 @@ export default function SubscribersPage() {
           </div>
         )}
 
-        {/* Dynamic & Spacious Table */}
+        {/* Table */}
         {loading ? (
           <div className="flex min-h-[400px] items-center justify-center rounded-3xl border border-white/10 bg-[#08192D]/60 backdrop-blur-xl">
             <div className="text-center space-y-4">
@@ -323,12 +323,15 @@ export default function SubscribersPage() {
                 <tbody className="divide-y divide-white/5">
                   {filteredUsers.map((user) => {
                     const company = user.company;
-                    const latestSub = user.subscriptions?.[0];
+                    // Récupère le premier abonnement disponible (s'il existe)
+                    const latestSub = user.subscriptions && user.subscriptions.length > 0 
+                      ? user.subscriptions[0] 
+                      : null;
 
                     const displayName = company?.name || user.name || "Compte sans nom";
                     const contactEmail = company?.email || user.email;
                     const contactPhone = company?.phone || user.phone;
-                    const planName = latestSub?.plan?.name || "Sans Forfait";
+                    const planName = latestSub?.plan?.name || (user.subscriptionStatus === "FREE" ? "Offre Gratuite" : "Aucun plan");
                     const isActive = user.subscriptionStatus?.toUpperCase() === "ACTIVE";
 
                     return (
@@ -336,7 +339,7 @@ export default function SubscribersPage() {
                         key={user.id}
                         className="group transition hover:bg-white/[0.04]"
                       >
-                        {/* Client / Entreprise (Agrandie) */}
+                        {/* Client / Entreprise */}
                         <td className="px-8 py-6">
                           <div className="flex items-center gap-4">
                             {company?.logo ? (
@@ -372,7 +375,7 @@ export default function SubscribersPage() {
                           </div>
                         </td>
 
-                        {/* Coordonnées (Agrandie) */}
+                        {/* Coordonnées */}
                         <td className="px-8 py-6">
                           <div className="space-y-1.5">
                             <div className="flex items-center gap-2 text-sm font-semibold text-slate-200">
@@ -390,12 +393,12 @@ export default function SubscribersPage() {
                           </div>
                         </td>
 
-                        {/* Forfait actuel (Agrandie) */}
+                        {/* Forfait actuel */}
                         <td className="px-8 py-6">
                           <div className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-extrabold text-slate-100 shadow-sm">
                             <Crown
                               className={`h-4 w-4 ${
-                                planName.toLowerCase().includes("premium") || planName.toLowerCase().includes("business")
+                                planName.toLowerCase().includes("pro") || planName.toLowerCase().includes("business")
                                   ? "text-yellow-400"
                                   : "text-slate-400"
                               }`}
@@ -404,12 +407,12 @@ export default function SubscribersPage() {
                           </div>
                         </td>
 
-                        {/* Période d'abonnement (Agrandie) */}
+                        {/* Période d'abonnement */}
                         <td className="px-8 py-6">
                           <div className="space-y-1 text-sm text-slate-300">
                             <div className="flex items-center gap-2">
                               <Calendar className="h-4 w-4 text-slate-400 shrink-0" />
-                              <span>Début : <strong className="text-white">{formatDate(latestSub?.startDate)}</strong></span>
+                              <span>Début : <strong className="text-white">{formatDate(latestSub?.startDate || user.createdAt)}</strong></span>
                             </div>
                             <div className="flex items-center gap-2 pl-6 text-slate-400">
                               <span>Fin : <strong className="text-slate-200">{formatDate(latestSub?.endDate)}</strong></span>
@@ -417,7 +420,7 @@ export default function SubscribersPage() {
                           </div>
                         </td>
 
-                        {/* Statut (Agrandie) */}
+                        {/* Statut */}
                         <td className="px-8 py-6 text-right">
                           {isActive ? (
                             <span className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-4 py-1.5 text-sm font-bold text-emerald-400">
@@ -425,9 +428,9 @@ export default function SubscribersPage() {
                               Actif
                             </span>
                           ) : (
-                            <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-sm font-bold text-slate-400">
-                              <span className="h-2 w-2 rounded-full bg-slate-500" />
-                              {user.subscriptionStatus || "Inactif"}
+                            <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-sm font-bold text-amber-400/90">
+                              <span className="h-2 w-2 rounded-full bg-amber-400" />
+                              {user.subscriptionStatus || "Gratuit"}
                             </span>
                           )}
                         </td>
